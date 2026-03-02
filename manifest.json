@@ -1,0 +1,17 @@
+{
+  "name": "Expense Tracker Pro",
+  "short_name": "ExpensePro",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fe",
+  "theme_color": "#111111",
+  "description": "A smart, simple, and professional expense tracker.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135679.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
