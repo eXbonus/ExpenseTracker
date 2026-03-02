@@ -990,7 +990,14 @@
             const logsList = document.getElementById('logs-tx-list');
 
             if (homeList) homeList.innerHTML = filtered.slice(0, 5).map(t => createTxHTML(t, 'home')).join('');
-            if (statementList) statementList.innerHTML = filtered.map(t => createTxHTML(t, 'statement')).join('');
+            // NEW: "All Transactions" now ignores the month filter and shows EVERYTHING sorted by date!
+            if (statementList) {
+                const allSorted = [...transactions].sort((a, b) => {
+                    const dateDiff = new Date(b.date) - new Date(a.date);
+                    return dateDiff !== 0 ? dateDiff : b.id - a.id;
+                });
+                statementList.innerHTML = allSorted.map(t => createTxHTML(t, 'statement')).join('');
+            }
             if (logsList) {
                 const sortedLogs = [...deletedTransactions].sort((a,b) => b.deletedAt - a.deletedAt);
                 logsList.innerHTML = sortedLogs.map(t => createTxHTML(t, 'logs')).join('');
