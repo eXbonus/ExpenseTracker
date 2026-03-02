@@ -8,9 +8,9 @@
   "description": "A smart, simple, and professional expense tracker.",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135679.png",
+      "src": "./icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
