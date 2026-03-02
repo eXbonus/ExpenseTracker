@@ -839,14 +839,27 @@
             } else finalizeSave(newTx);
         }
 
-        function finalizeSave(tx) {
+                function finalizeSave(tx) {
             try {
                 transactions.push(tx);
                 localStorage.setItem('tx_pro', JSON.stringify(transactions));
-                toggleModal(false); render();
+                toggleModal(false); 
+                
+                // NEW UX TWEAK: Auto-switch the home page to the month of the newly added transaction!
+                const txMonth = tx.date.substring(0, 7); // Extracts "YYYY-MM" from "YYYY-MM-DD"
+                const monthFilter = document.getElementById('month-filter');
+                if (monthFilter) {
+                    monthFilter.value = txMonth;
+                }
+                
+                render();
                 showPage('page-home', document.querySelectorAll('.nav-item')[0]);
-            } catch(e) { alert("Storage full! Use smaller images."); transactions.pop(); }
+            } catch(e) { 
+                alert("Storage full! Use smaller images."); 
+                transactions.pop(); 
+            }
         }
+
 
         let txToDelete = null;
         function openDeleteModal(id) { txToDelete = id; document.getElementById('delete-modal').style.display = 'flex'; }
