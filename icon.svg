@@ -1,4 +1,5 @@
-<svg xmlns="https://www.svgrepo.com/svg/222715/wallet"viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#ffffff" rx="110"/>
-  <path fill="#111111" d="M416 160H96c-17.7 0-32 14.3-32 32v128c0 17.7 14.3 32 32 32h320c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zm-48 112c-13.3 0-24-10.7-24-24s10.7-24 24-24 24 10.7 24 24-10.7 24-24 24z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff" rx="100"/>
+  
+  <path d="..." fill="#111111"/> 
 </svg>
