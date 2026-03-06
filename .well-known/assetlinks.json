@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.exbonus.twa",
-        "sha256_cert_fingerprints": ["0F:6F:18:4E:78:88:6E:AC:1E:78:5C:F8:AD:F3:5E:8F:94:D7:C0:65:B3:89:6C:1A:50:93:27:F2:77:68:33:D7"]
+        "sha256_cert_fingerprints": ["AC:2A:A1:AF:F0:C9:8A:F6:BF:87:C4:90:2E:5F:E3:36:7D:B5:97:27:A9:07:99:82:4A:2E:49:C6:1B:40:85:2B"]
       }
     }]
