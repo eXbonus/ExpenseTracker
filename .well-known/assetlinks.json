@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.expensepro.app",
+        "sha256_cert_fingerprints": ["0F:6F:18:4E:78:88:6E:AC:1E:78:5C:F8:AD:F3:5E:8F:94:D7:C0:65:B3:89:6C:1A:50:93:27:F2:77:68:33:D7"]
+      }
+    }]
