@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Expense Tracker Pro</title>
     <link rel="manifest" href="manifest.json">
    <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -135,7 +135,27 @@
         .section-title span:hover { text-decoration: underline; }
 
         .tx-list { list-style: none; padding: 0; margin: 0; }
+    /* --- DELETE ANIMATION --- */
+.tx-item.slide-out {
+    transform: translateX(-120%);
+    opacity: 0;
+    margin-bottom: -60px; /* Collapses the empty space smoothly */
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
         .tx-item { background: var(--card-bg); padding: 16px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.3s; gap: 10px; }
+            /* --- SLIDE DELETE ANIMATION --- */
+        .tx-item.slide-out {
+            transform: translateX(-100%);
+            opacity: 0;
+            /* This makes the gap collapse smoothly after it slides out */
+            margin-bottom: -80px; 
+            pointer-events: none;
+        }
+
         .tx-info { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
         .tx-icon { width: 45px; height: 45px; background: var(--secondary-btn); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
         .tx-details { flex: 1; min-width: 0; }
@@ -185,11 +205,13 @@
         input:checked + .slider .icon-right { stroke: #ffffff; } 
 
         /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 25px; background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; padding: 10px 15px; z-index: 990; border: 1px solid var(--border); }
+  .bottom-nav { position: fixed; bottom: 25px; background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; padding: 5px 10px; z-index: 990; border: 1px solid var(--border); }
         body.dark-mode .bottom-nav { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-                /* Updated Bottom Nav Icons with "Pop" Animation */
+              
+
+          /* Updated Bottom Nav Icons with "Pop" Animation */
         .nav-item { 
-            background: none; border: none; cursor: pointer; padding: 10px; 
+            background: none; border: none; cursor: pointer; padding: 8px 10px; 
             color: var(--text-muted); 
             /* We use a 'cubic-bezier' transition to give it a bouncy, spring-like feel */
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -212,8 +234,8 @@
             color: #ffffff;      /* Keeps the plus icon white for contrast */
             border: none; 
             border-radius: 50%; 
-            width: 55px; 
-            height: 55px; 
+            width: 48px; 
+            height: 48px; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -225,7 +247,48 @@
          .nav-fab:active { transform: scale(0.95); }
         .nav-fab svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* Modals */
+                        /* Modern Inline Month Selector */
+        .month-selector-modern {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            height: 44px;
+            padding: 0 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .month-arrow {
+            background: none; border: none; color: var(--text-muted);
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s; font-size: 14px;
+        }
+        .month-arrow:hover, .month-arrow:active { background: var(--secondary-btn); color: var(--text-main); }
+        .month-text {
+            font-size: 14px; font-weight: 600; color: var(--text-main);
+            min-width: 100px; text-align: center; user-select: none;
+        }
+
+    /* Modals */
+            /* --- iOS Smooth Modal Animations --- */
+        @keyframes fadeBackdrop {
+            0% { opacity: 0; backdrop-filter: blur(0px); }
+            100% { opacity: 1; backdrop-filter: blur(4px); }
+        }
+        @keyframes iosModalPop {
+            0% { opacity: 0; transform: scale(0.85) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        #add-modal, #delete-modal, #reset-modal, #restore-modal, #image-modal, #sub-modal { 
+            animation: fadeBackdrop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        
+        .modal-content, #receipt-image-display { 
+            animation: iosModalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+        }
+
         #add-modal, #delete-modal, #reset-modal, #restore-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
         #add-modal.open, #delete-modal.open { display: flex; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; }
@@ -285,6 +348,37 @@
         }
         .category-item span { font-weight: 500; font-size: 15px; color: var(--text-main); }
 
+            /* --- Search Bar Styles --- */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 0 5px 15px 5px;
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+        }
+        #tx-search {
+            width: 100%;
+            padding: 14px 14px 14px 45px; /* Extra left padding for the icon */
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: 0.2s;
+            margin: 0; 
+        }
+        #tx-search:focus {
+            border-color: var(--primary-btn);
+        }
+
         /* --- DESKTOP / TABLET RESPONSIVE DESIGN --- */
         @media (min-width: 768px) {
             body { justify-content: flex-start; overflow-x: hidden; }
@@ -305,6 +399,145 @@
             .balance-card { max-width: 100%; }
             #page-onboarding { left: 280px; width: calc(100% - 280px); }
         }
+                    /* --- THEME SELECTOR CIRCLES --- */
+        .theme-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            padding: 0; 
+            margin: 0;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            -webkit-appearance: none; /* 👇 Fixes the squashed mobile bug! */
+            appearance: none; 
+            display: inline-block; 
+        }
+
+
+               /* --- THEME CLASSES (Whole App Color) --- */
+        body { min-height: 100vh; }
+
+        /* Light Mode Themes (Balance card stays default black!) */
+        body.theme-blue {
+            --primary-btn: #2196f3;
+            background-image: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+        }
+        body.theme-green {
+            --primary-btn: #4caf50;
+            background-image: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+        }
+        body.theme-red {
+            --primary-btn: #f44336;
+            background-image: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
+        }
+        body.theme-yellow {
+            --primary-btn: #ffb300;
+            background-image: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
+        }
+
+                /* Dark Mode Themes (Pure dark background, ONLY buttons get the theme color) */
+        body.dark-mode.theme-blue { 
+            background-image: none; 
+            --primary-btn: #2196f3; 
+        }
+        body.dark-mode.theme-green { 
+            background-image: none; 
+            --primary-btn: #4caf50; 
+        }
+        body.dark-mode.theme-red { 
+            background-image: none; 
+            --primary-btn: #f44336; 
+        }
+        body.dark-mode.theme-yellow { 
+            background-image: none; 
+            --primary-btn: #ffb300; 
+        }
+
+        /* FIX INVISIBLE TEXT: Forces text to white so it is readable on the colored buttons */
+        body[class*="theme-"] .btn-black,
+        body[class*="theme-"] .btn-start,
+        body[class*="theme-"] .filter-btn.active,
+        body[class*="theme-"] .type-btn[data-type="transfer"].active {
+            color: #ffffff !important;
+        }
+
+        /* Yellow is a bright color, so it gets dark text for better readability */
+        body.theme-yellow .btn-black,
+        body.theme-yellow .btn-start,
+        body.theme-yellow .filter-btn.active,
+        body.theme-yellow .type-btn[data-type="transfer"].active {
+            color: #111111 !important;
+        }
+
+        /* Force the Bottom Nav and Plus Button to use the new Theme Colors */
+        .nav-fab {
+            background: var(--primary-btn) !important;
+            color: #ffffff !important;
+        }
+        body.theme-yellow .nav-fab { 
+            color: #111111 !important; 
+        }
+        .nav-item.active {
+            color: var(--primary-btn) !important;
+        }
+        /* --- Colorize Header Elements with Theme Color --- */
+        
+        /* 1. Hamburger menu and Back buttons */
+        body[class*="theme-"] .icon-btn.floating-pill {
+            color: var(--primary-btn);
+        }
+        
+        /* 2. Page titles (Home, Settings, etc.) */
+        body[class*="theme-"] .page-title-pill h2 {
+            color: var(--primary-btn);
+        }
+        
+        /* 3. Month selector text and arrows */
+        body[class*="theme-"] .month-text,
+        body[class*="theme-"] .month-arrow {
+            color: var(--primary-btn);
+        }
+
+        /* Keep the arrow hover effect looking clean */
+        body[class*="theme-"] .month-arrow:hover,
+        body[class*="theme-"] .month-arrow:active {
+            color: var(--primary-btn);
+            opacity: 0.7;
+        }
+           /* --- CALCULATOR STYLES --- */
+        .calc-container {
+            background: var(--card-bg); border-radius: 28px; padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 10px;
+        }
+        body.dark-mode .calc-container { box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        
+        .calc-display {
+            background: var(--bg-color); border-radius: 16px; padding: 20px;
+            font-size: 36px; text-align: right; margin-bottom: 20px; color: var(--text-main);
+            word-wrap: break-word; min-height: 85px; display: flex; align-items: flex-end; justify-content: flex-end;
+        }
+        
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        
+        .calc-btn {
+            background: var(--secondary-btn); color: var(--text-main); border: none;
+            border-radius: 16px; font-size: 22px; padding: 18px 0; cursor: pointer;
+            transition: 0.2s; font-weight: 500;
+        }
+        .calc-btn:active { transform: scale(0.92); }
+        
+        .calc-op { color: var(--primary-btn); font-weight: 600; font-size: 24px; }
+        .calc-zero { grid-column: span 2; }
+        .calc-equals { background: var(--primary-btn); color: var(--bg-color); font-weight: 600; }
+        
+        body[class*="theme-"] .calc-op { color: var(--primary-btn); }
+        body[class*="theme-"] .calc-equals { background: var(--primary-btn); color: #ffffff !important; }
+        body.theme-yellow .calc-equals { color: #111111 !important; }
+
+
+
     </style>
 </head>
 <body>
@@ -335,6 +568,10 @@
         <div class="sidebar-item" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Home
         </div>
+                
+        <div class="sidebar-item" onclick="showPage('page-calculator')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 16H7v-2h6v2zm4-4H7v-2h10v2zm0-4H7V9h10v2zm-4-4H7V5h6v2z"/></svg> Calculator
+        </div>
         <div class="sidebar-item" onclick="showPage('page-settings')">
             <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> Settings
         </div>
@@ -355,8 +592,13 @@
                         <h2>Home</h2>
                     </div>
                 </div>
-                <input type="month" id="month-filter" class="month-picker floating-pill">
-            </div>
+                <div class="month-selector-modern">
+                    <button class="month-arrow" onclick="shiftMonth(-1, 'home')">❮</button>
+                    <span class="month-text" id="home-month-display">March 2026</span>
+                    <button class="month-arrow" onclick="shiftMonth(1, 'home')">❯</button>
+                    <input type="hidden" id="month-filter">
+                </div>
+       </div>
 
             <div class="balance-card">
                 <h4>Total Balance</h4>
@@ -377,7 +619,7 @@
                 <button class="btn btn-black" onclick="toggleModal(true)">Add Manual</button>
                 
                 <input type="file" id="file-upload" accept=".csv, .xlsx, .xls" style="display: none;" onchange="handleFileUpload(event)">
-                <button class="btn btn-gray" onclick="document.getElementById('file-upload').click()">Import Data</button>
+                <button class="btn btn-black" onclick="document.getElementById('file-upload').click()">Import Data</button>
             </div>
 
             <div class="section-title" style="margin-top: 10px;">
@@ -388,6 +630,16 @@
                 <canvas id="homeBarChart" height="200"></canvas>
             </div> 
 
+            <div class="search-filter-container" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div style="flex: 1; position: relative;">
+                    <svg style="position: absolute; left: 15px; top: 13px; width: 18px; height: 18px; color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search-input" placeholder="Search transactions..." style="width: 100%; padding: 12px 12px 12px 42px; border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main); margin: 0; outline: none;">
+                </div>
+                <button class="icon-btn" onclick="openFilterModal()" style="width: 44px; height: 44px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); cursor: pointer; transition: 0.2s;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                </button>
+            </div>
+        
             <div class="section-title">
                 <h3>Transactions</h3>
                 <span onclick="showPage('page-statement', document.querySelectorAll('.nav-item')[3])">See All</span>
@@ -409,7 +661,13 @@
                         <h2>Balance Trend</h2>
                     </div>
                 </div>
-                <input type="month" id="analytics-month-filter" class="month-picker floating-pill">
+                <div class="month-selector-modern">
+                    <button class="month-arrow" onclick="shiftMonth(-1, 'analytics')">❮</button>
+                    <span class="month-text" id="analytics-month-display">March 2026</span>
+                    <button class="month-arrow" onclick="shiftMonth(1, 'analytics')">❯</button>
+                    <input type="hidden" id="analytics-month-filter">
+                </div>
+
             </div>
             
             <p style="color: var(--text-muted); font-size: 14px; margin-top: 0; margin-bottom: 20px; padding-left: 5px;">Do I have more money than before?</p>
@@ -437,7 +695,58 @@
             <div class="chart-container" style="padding: 20px 10px 10px;">
                 <canvas id="analyticsLineChart" height="220"></canvas>
             </div>
+            <div class="section-title" style="margin-top: 25px; padding: 0 5px;">
+                <h3 style="font-size: 16px;">Income Breakdown</h3>
+            </div>
+            
+            <div class="chart-container" style="display: flex; justify-content: center; padding: 20px; margin-bottom: 30px;">
+                <canvas id="incomeDoughnutChart" height="200"></canvas>
+            </div>
         </div>
+                <div id="page-calculator" class="page" style="display: none;">
+            <div class="header">
+                <div class="header-left">
+                    <button class="icon-btn floating-pill" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <div class="page-title-pill floating-pill">
+                        <h2>Calculator</h2>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="calc-container">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-grid">
+                    <button class="calc-btn calc-op" onclick="calcInput('C')">C</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('DEL')">⌫</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('%')">%</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('-')">-</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+                    
+                    <button class="calc-btn calc-zero" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn calc-equals" onclick="calcInput('=')">=</button>
+                </div>
+            </div>
+        </div>
+ 
+        
+
 
         <div id="page-settings" class="page" style="display: none;">
             <div class="header">
@@ -482,6 +791,15 @@
                     </span>
                 </label>
             </div>
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <span style="margin-bottom: 15px;">Theme Color</span>
+                <div style="display: flex; gap: 15px;">
+                    <button class="theme-circle" data-theme="blue" style="background: #2196f3;"></button>
+                    <button class="theme-circle" data-theme="green" style="background: #4caf50;"></button>
+                    <button class="theme-circle" data-theme="red" style="background: #f44336;"></button>
+                    <button class="theme-circle" data-theme="yellow" style="background: #ffb300;"></button>
+                     </div>
+            </div>
 
             <div class="setting-row" style="cursor: pointer;" onclick="showPage('page-logs')">
                 <span>Recently Deleted (Logs)</span>
@@ -495,7 +813,7 @@
 
         </div>
 
-        <div id="page-statement" class="page" style="display: none;">
+               <div id="page-statement" class="page" style="display: none;">
             <div class="header">
                 <div class="header-left">
                     <button class="icon-btn floating-pill" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
@@ -506,8 +824,20 @@
                     </div>
                 </div>
             </div>
+            
+           <div style="display: flex; gap: 10px; margin: 0 5px 15px 5px;">
+                <div class="search-container" style="flex: 1; margin: 0;">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="tx-search" placeholder="Search by name, category, or amount..." oninput="render()">
+                </div>
+                
+                <button class="icon-btn" onclick="openFilterModal()" style="width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.02); flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                </button>
+            </div>
             <ul class="tx-list" id="statement-tx-list"></ul>
         </div>
+
 
         <div id="page-logs" class="page" style="display: none;">
             <div class="header">
@@ -547,7 +877,7 @@
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <div class="selection-pill" onclick="openSubModal('account')">
                     <small>Account</small>
-                    <strong id="selected-account">CASH</strong>
+                    <strong id="selected-account">Cash</strong>
                 </div>
                 <div class="selection-pill" onclick="openSubModal('category')">
                     <small>Category</small>
@@ -581,7 +911,10 @@
         <div class="modal-content sub-modal-content">
             <div class="header" style="padding: 10px 0;">
                 <h3 id="sub-modal-title" style="margin:0;">Select</h3>
-                <button class="icon-btn" onclick="closeSubModal()">✕</button>
+                                        <button class="icon-btn" onclick="closeSubModal()" style="display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--expense-color)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+                
             </div>
             <div id="sub-modal-list" class="scroll-list">
             </div>
@@ -617,10 +950,37 @@
 
     <div id="image-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1002; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px);">
         <div style="width: 100%; max-width: 500px; text-align: right; padding: 20px;">
-            <button class="icon-btn" onclick="closeImageModal()" style="color: white; font-size: 24px; background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; border: none; cursor: pointer;">✕</button>
-        </div>
+                        <button class="icon-btn" onclick="closeImageModal()" style="color: var(--expense-color); background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+               </div>
         <img id="receipt-image-display" src="" style="max-width: 90%; max-height: 75vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     </div>
+          
+
+    <div id="filter-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1005; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="max-width: 350px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">Filter Transactions</h3>
+            </div>
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Start Date</label>
+            <input type="date" id="filter-start-date" style="margin-top: 5px; margin-bottom: 15px;">
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">End Date</label>
+            <input type="date" id="filter-end-date" style="margin-top: 5px; margin-bottom: 15px;">
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Category</label>
+            <select id="filter-category" style="width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none;">
+                <option value="">All Categories</option>
+                </select>
+
+            <button class="btn btn-black" style="width:100%; margin-bottom: 10px;" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-gray" style="width:100%;" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+    
     <script>
         // --- 1. APP INITIALIZATION & DATA LOADING ---
         const onboardingScreen = document.getElementById('page-onboarding');
@@ -788,7 +1148,7 @@
             document.getElementById('tx-title').value = '';
             document.getElementById('tx-amount').value = '';
             document.getElementById('tx-date').valueAsDate = new Date();
-            document.getElementById('selected-account').innerText = 'CASH';
+            document.getElementById('selected-account').innerText = 'ACCOUNT';
             document.getElementById('selected-category').innerText = 'OTHERS';
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
@@ -860,22 +1220,50 @@
             }
         }
 
-
         let txToDelete = null;
         function openDeleteModal(id) { txToDelete = id; document.getElementById('delete-modal').style.display = 'flex'; }
         function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
         function executeDelete() {
-            const idx = transactions.findIndex(t => String(t.id) === String(txToDelete));
-            if(idx > -1) {
+    const idx = transactions.findIndex(t => String(t.id) === String(txToDelete));
+    if(idx > -1) {
+        // 1. Close the modal immediately so the user sees the animation
+        closeDeleteModal();
+        
+        // 2. Play the Shhsh sound
+        // Replace this URL with 'shhsh.mp3' if you download your own sound file
+        const shushSound = new Audio('Shwish.mp3'); 
+        shushSound.play().catch(e => console.log('Audio failed to play (browser auto-play policy):', e));
+
+        // 3. Find the exact list item in the DOM and animate it
+        const liElement = document.getElementById(`tx-elm-${txToDelete}`);
+        
+        if (liElement) {
+            // Trigger the CSS slide-out
+            liElement.classList.add('slide-out');
+            
+            // 4. Wait 400ms for the animation to finish before updating data and re-rendering
+            setTimeout(() => {
                 const tx = transactions.splice(idx, 1)[0];
                 tx.deletedAt = Date.now();
                 deletedTransactions.push(tx);
                 localStorage.setItem('tx_pro', JSON.stringify(transactions));
                 localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
                 render();
-            }
-            closeDeleteModal();
+            }, 400); 
+        } else {
+            // Fallback just in case the element wasn't found
+            const tx = transactions.splice(idx, 1)[0];
+            tx.deletedAt = Date.now();
+            deletedTransactions.push(tx);
+            localStorage.setItem('tx_pro', JSON.stringify(transactions));
+            localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
+            render();
         }
+    }
+         else {
+        closeDeleteModal();
+    }
+}
 
         let txToRestore = null;
         function openRestoreModal(id) { txToRestore = id; document.getElementById('restore-modal').style.display = 'flex'; }
@@ -936,16 +1324,16 @@
             const valColor = isExp ? 'var(--expense-color)' : 'var(--income-color)';
             const sign = isExp ? '-' : '+';
 
-            // Get the formatted date (Today, Yesterday, or Feb 3 2026)
+                       // Get the formatted date (Today, Yesterday, or Feb 3 2026)
             const displayDate = formatRelativeDate(t.date);
 
-            // New layout: Stack the amount on top of the date
+            // New layout: Just the amount (date is now handled by headers)
             const valHtml = `
                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                     <div class="tx-val blur-target" style="color: ${valColor}">${sign}₹${Math.abs(t.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-                    <small style="color: var(--text-muted); font-size: 11.5px; margin-top: 3px; font-weight: 500;">${displayDate}</small>
                 </div>
             `;
+
 
             let rightSide = '';
             let actionHtml = '';
@@ -967,8 +1355,8 @@
             }
 
             return `
-                <li class="tx-item" ${actionHtml}>
-                    <div class="tx-info">
+                <li class="tx-item" id="tx-row-${t.id}" ${actionHtml}>
+                   <div class="tx-info">
                         <div class="tx-icon" style="background:${cat.color}20;color:${cat.color}">${cat.icon}</div>
                         <div class="tx-details">
                             <strong>${t.title}</strong>
@@ -979,14 +1367,126 @@
                 </li>
             `;
         }
+           
+        // --- SEARCH & FILTER LOGIC ---
+        let currentSearchQuery = '';
+        let currentFilterStart = '';
+        let currentFilterEnd = '';
+        let currentFilterCategory = '';
+
+        // Listen for typing in the search bar
+        const searchInput = document.getElementById('search-input');
+        if(searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                currentSearchQuery = e.target.value.toLowerCase();
+                render(); // Instantly update list as you type!
+            });
+        }
+
+        function openFilterModal() {
+            // Populate category dropdown dynamically
+            const catSelect = document.getElementById('filter-category');
+            if (catSelect.options.length <= 1) {
+                categories.forEach(c => {
+                    if(!c.parent) { // Only list main categories for simplicity
+                        const opt = document.createElement('option');
+                        opt.value = c.name.toUpperCase();
+                        opt.innerText = c.name;
+                        catSelect.appendChild(opt);
+                    }
+                });
+            }
+            document.getElementById('filter-modal').style.display = 'flex';
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filter-modal').style.display = 'none';
+        }
+
+        function applyFilters() {
+            currentFilterStart = document.getElementById('filter-start-date').value;
+            currentFilterEnd = document.getElementById('filter-end-date').value;
+            currentFilterCategory = document.getElementById('filter-category').value;
+            closeFilterModal();
+            render();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
+            document.getElementById('filter-category').value = '';
+            currentFilterStart = '';
+            currentFilterEnd = '';
+            currentFilterCategory = '';
+            closeFilterModal();
+            render();
+        }
+        /* 👆 ---------------------- 👆 */
+        // --- TRANSACTION GROUPING HELPER ---
+        function renderGroupedTransactions(txArray, mode) {
+            if (!txArray || txArray.length === 0) {
+                return '<div style="text-align:center; padding: 30px 20px; color: var(--text-muted); font-size: 14px;">No transactions found</div>';
+            }
+            
+            let html = '';
+            let lastDate = null;
+
+            txArray.forEach(t => {
+                // If the date changes, insert a beautiful Date Header
+                if (t.date !== lastDate) {
+                    const headerDate = formatRelativeDate(t.date);
+                    html += `
+                        <div style="padding: 20px 5px 8px; font-size: 12.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">
+                            ${headerDate}
+                        </div>
+                    `;
+                    lastDate = t.date;
+                }
+                
+                // Insert the transaction itself
+                html += createTxHTML(t, mode);
+            });
+
+            return html;
+        }
 
 
-        function render() {
-                        const selMonth = monthFilter ? monthFilter.value : '';
-            const filtered = transactions.filter(t => !selMonth || t.date.startsWith(selMonth)).sort((a, b) => {
-                // Sort by the actual calendar date first (Newest to Oldest)
+               function render() {
+            const selMonth = monthFilter ? monthFilter.value : '';
+            
+            // Apply Search, Dates, and Categories
+            const filtered = transactions.filter(t => {
+                // 1. Month Check (Bypass this if the user is using the specific Date Filter or Search)
+                let passMonth = true;
+                if (!currentFilterStart && !currentFilterEnd && !currentSearchQuery && selMonth) {
+                    passMonth = t.date.startsWith(selMonth);
+                }
+
+                // 2. Search Text Check
+                let passSearch = true;
+                if (currentSearchQuery) {
+                    passSearch = t.title.toLowerCase().includes(currentSearchQuery) || 
+                                 (t.category && t.category.toLowerCase().includes(currentSearchQuery));
+                }
+
+                // 3. Date Range Check
+                let passDateRange = true;
+                if (currentFilterStart || currentFilterEnd) {
+                    const tDate = new Date(t.date);
+                    if (currentFilterStart && tDate < new Date(currentFilterStart)) passDateRange = false;
+                    if (currentFilterEnd && tDate > new Date(currentFilterEnd)) passDateRange = false;
+                }
+
+                // 4. Category Check
+                let passCategory = true;
+                if (currentFilterCategory) {
+                    passCategory = (t.category || '').toUpperCase() === currentFilterCategory.toUpperCase() ||
+                                   (categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase())?.parent?.toUpperCase() === currentFilterCategory.toUpperCase());
+                }
+
+                return passMonth && passSearch && passDateRange && passCategory;
+            }).sort((a, b) => {
                 const dateDiff = new Date(b.date) - new Date(a.date);
-                // If dates are exactly the same, sort by which one was added most recently
                 return dateDiff !== 0 ? dateDiff : b.id - a.id;
             });
 
@@ -1002,22 +1502,51 @@
             const statementList = document.getElementById('statement-tx-list');
             const logsList = document.getElementById('logs-tx-list');
 
-            if (homeList) homeList.innerHTML = filtered.slice(0, 5).map(t => createTxHTML(t, 'home')).join('');
-            // NEW: "All Transactions" now ignores the month filter and shows EVERYTHING sorted by date!
+            // Apply the new grouping logic to all three lists
+            if (homeList) {
+                homeList.innerHTML = renderGroupedTransactions(filtered.slice(0, 5), 'home');
+            }
             if (statementList) {
+                // Get the search term
+                const searchInput = document.getElementById('tx-search');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
                 const allSorted = [...transactions].sort((a, b) => {
                     const dateDiff = new Date(b.date) - new Date(a.date);
                     return dateDiff !== 0 ? dateDiff : b.id - a.id;
                 });
-                statementList.innerHTML = allSorted.map(t => createTxHTML(t, 'statement')).join('');
-            }
-            if (logsList) {
-                const sortedLogs = [...deletedTransactions].sort((a,b) => b.deletedAt - a.deletedAt);
-                logsList.innerHTML = sortedLogs.map(t => createTxHTML(t, 'logs')).join('');
+                
+                // Filter by Search Text AND Modal Filters
+                const searchFiltered = allSorted.filter(t => {
+                    let passSearch = true;
+                    if (searchTerm) {
+                        passSearch = t.title.toLowerCase().includes(searchTerm) || 
+                                     (t.category || '').toLowerCase().includes(searchTerm) || 
+                                     Math.abs(t.amount).toString().includes(searchTerm);
+                    }
+
+                    let passDateRange = true;
+                    if (typeof currentFilterStart !== 'undefined' && (currentFilterStart || currentFilterEnd)) {
+                        const tDate = new Date(t.date);
+                        if (currentFilterStart && tDate < new Date(currentFilterStart)) passDateRange = false;
+                        if (currentFilterEnd && tDate > new Date(currentFilterEnd)) passDateRange = false;
+                    }
+
+                    let passCategory = true;
+                    if (typeof currentFilterCategory !== 'undefined' && currentFilterCategory) {
+                        passCategory = (t.category || '').toUpperCase() === currentFilterCategory.toUpperCase() ||
+                                       (categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase())?.parent?.toUpperCase() === currentFilterCategory.toUpperCase());
+                    }
+
+                    return passSearch && passDateRange && passCategory;
+                });
+
+                statementList.innerHTML = renderGroupedTransactions(searchFiltered, 'statement');
             }
 
             document.getElementById('total-balance').innerText = `₹${(inc - exp).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-income').innerText = `₹${inc.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+                        document.getElementById('total-income').innerText = `₹${inc.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
             document.getElementById('total-expense').innerText = `₹${exp.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
             
             updateHomeChart(filtered);
@@ -1025,9 +1554,10 @@
                 updateLineChart(1, document.querySelector('.filter-btn.active'));
             }
         }
+            
+                // --- 7. CHARTS ---
+        let homeChart = null, lineChart = null, incomeChart = null;
 
-        // --- 7. CHARTS ---
-        let homeChart = null, lineChart = null;
 
                 function updateHomeChart(filtered = transactions) {
             const canvas = document.getElementById('homeBarChart');
@@ -1036,8 +1566,17 @@
             
             const expenses = filtered.filter(t => t.type === 'expense' || (t.amount < 0 && !t.type));
             const grouped = {};
-            expenses.forEach(t => { grouped[t.category || 'Others'] = (grouped[t.category || 'Others'] || 0) + Math.abs(t.amount); });
-            
+            expenses.forEach(t => { 
+                const catObj = categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase());
+                let groupName = t.category || 'Others';
+                
+                // If it's in a folder, give the money to the folder instead!
+                if (catObj && catObj.parent) groupName = catObj.parent;
+                else if (catObj) groupName = catObj.name;
+                
+                grouped[groupName] = (grouped[groupName] || 0) + Math.abs(t.amount); 
+            });
+
             const sortedExpenses = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
             const labels = sortedExpenses.map(item => item[0]);
             const data = sortedExpenses.map(item => item[1]);
@@ -1058,15 +1597,19 @@
                 finalData = [1]; // 1 solid ring
                 bgColors = [isDark ? '#333333' : '#e2e8f0']; // Dark gray for dark mode, light gray for light mode
                 isPlaceholder = true;
-            } else {
+                       } else {
                 // Otherwise, render the real colors
                 bgColors = labels.map(label => {
                     const cat = categories.find(c => c.name.toUpperCase() === label.toUpperCase());
+                    if (cat && cat.parent) {
+                        const parentCat = categories.find(c => c.name.toUpperCase() === cat.parent.toUpperCase());
+                        return parentCat ? parentCat.color : cat.color;
+                    }
                     return cat ? cat.color : '#9e9e9e'; 
                 });
             }
 
-            homeChart = new Chart(ctx, {
+          homeChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { 
                     labels: finalLabels, 
@@ -1093,8 +1636,86 @@
                     } 
                 }
             });
-        }
+                }
 
+        function updateIncomeChartForPeriod(startDate, endDate) {
+            const canvas = document.getElementById('incomeDoughnutChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Find all transactions within the selected graph time period
+            const periodTx = transactions.filter(t => {
+                const d = new Date(t.date);
+                return d >= startDate && d <= endDate;
+            });
+
+            // Filter ONLY for Income
+                        const incomes = periodTx.filter(t => t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer'));
+            const grouped = {};
+            incomes.forEach(t => { 
+                const catObj = categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase());
+                let groupName = t.category || 'Others';
+                
+                // If it's in a folder, give the money to the folder instead!
+                if (catObj && catObj.parent) groupName = catObj.parent;
+                else if (catObj) groupName = catObj.name;
+                
+                grouped[groupName] = (grouped[groupName] || 0) + Math.abs(t.amount); 
+            });
+
+            const sortedIncomes = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+            const labels = sortedIncomes.map(item => item[0]);
+            const data = sortedIncomes.map(item => item[1]);
+
+            if(incomeChart) incomeChart.destroy();
+
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            let finalLabels = labels;
+            let finalData = data;
+            let bgColors = [];
+            let isPlaceholder = false;
+
+            if (data.length === 0) {
+                finalLabels = ['No Income Yet'];
+                finalData = [1]; 
+                bgColors = [isDark ? '#333333' : '#e2e8f0']; 
+                isPlaceholder = true;
+                        } else {
+                bgColors = labels.map(label => {
+                    const cat = categories.find(c => c.name.toUpperCase() === label.toUpperCase());
+                    if (cat && cat.parent) {
+                        const parentCat = categories.find(c => c.name.toUpperCase() === cat.parent.toUpperCase());
+                        return parentCat ? parentCat.color : cat.color;
+                    }
+                    // Fallback to green if it's an uncategorized income
+                    return cat ? cat.color : 'var(--income-color)'; 
+                });
+            }
+
+
+            incomeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { 
+                    labels: finalLabels, 
+                    datasets: [{ 
+                        data: finalData, 
+                        backgroundColor: bgColors, 
+                        borderWidth: isPlaceholder ? 0 : 2, 
+                        borderColor: isDark ? '#1e1e1e' : '#ffffff' 
+                    }] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%', 
+                    plugins: { 
+                        legend: { display: !isPlaceholder, position: 'right', labels: { color: isDark ? '#a1a1a1' : '#717171', usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                        tooltip: { enabled: !isPlaceholder }
+                    } 
+                }
+            });
+        }
+    
+               
 
         function updateLineChart(months, btnElement = null) {
             if (btnElement) {
@@ -1190,7 +1811,7 @@
 
             if(lineChart) lineChart.destroy();
 
-            const blueColor = '#2196f3';
+            const blueColor = getComputedStyle(document.body).getPropertyValue('--primary-btn').trim() || '#2196f3';
             const bgGradient = ctx.createLinearGradient(0, 0, 0, 250);
             bgGradient.addColorStop(0, isDark ? 'rgba(33, 150, 243, 0.4)' : 'rgba(33, 150, 243, 0.25)');
             bgGradient.addColorStop(1, 'rgba(33, 150, 243, 0.0)');
@@ -1227,6 +1848,9 @@
                     }
                 }
             });
+                            // Automatically update the Income Doughnut chart to match the Line Chart's timeframe
+            updateIncomeChartForPeriod(startDate, endDate);
+
         }
 
         const categories = [
@@ -1236,14 +1860,67 @@
             { name: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1-.9-2-2-2V7c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h2v3h2v-3h8v3h2v-3h2v-5zM8 7h8v3H8V7zm1 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>' },
             { name: 'Vehicle', color: '#9c27b0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.07-.21.27-.35.49-.35h10.48c.22 0 .42.14.49.35L19 11H5z"/></svg>' },
             { name: 'Investments', color: '#e91e63', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3.26 1.48 3.26 2.47 0 1.01-.71 1.98-2.88 1.98-2.09 0-2.95-.91-3.04-2.1H7.04c.1 1.99 1.55 3.21 3.46 3.69V21h3v-2.17c2.02-.42 3.51-1.63 3.51-3.59 0-2.43-1.9-3.41-4.71-4.34z"/></svg>' },
-            { name: 'Loans', color: '#1976d2', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 10h3v7H4zM10.5 10h3v7h-3zM2 19h20v3H2zM17 10h3v7h-3zM12 1L2 6v2h20V6z"/></svg>' },
             { name: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>' },
-            { name: 'Others', color: '#9e9e9e', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>' }
-        ];
+            { name: 'Loans', color: '#1976d2', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 10h3v7H4zM10.5 10h3v7h-3zM2 19h20v3H2zM17 10h3v7h-3zM12 1L2 6v2h20V6z"/></svg>' },
+            { name: 'Life & Ent.', color: '#64dd17', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>' },
+            
+            /* --- COMMUNICATION FOLDER --- */
+            { name: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>' },
+            
+            /* --- SUB-CATEGORIES --- */
+            { name: 'General Comm.', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>' },
+            { name: 'Mobile Bill', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>' },
+            { name: 'Internet / Wi-Fi', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1 9l2 2c5-5 13-5 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>' },
+            { name: 'Software / Apps', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>' },
+            /* ----------------------------- */
+            
+            { name: 'Financial exp.', color: '#00bfa5', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.11-1.36-3.11-2.92v-.46h2.26v.29c0 .8.8 1.41 2.18 1.41 1.5 0 2.23-.55 2.23-1.3 0-.96-.92-1.36-2.52-1.87-1.84-.61-3.23-1.47-3.23-3.21 0-1.57 1.25-2.63 2.86-2.95V5h2.67v1.89c1.6.31 2.8 1.23 2.94 2.76h-2.22c-.1-.7-.7-1.31-1.95-1.31-1.25 0-1.97.55-1.97 1.24 0 .84.81 1.21 2.5 1.77 2 .65 3.32 1.5 3.32 3.3 0 1.62-1.29 2.72-2.9 3.04z"/></svg>' },
+            { name: 'Others', color: '#9e9e9e', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>' },
+            
+                        /* --- TRANSPORTATION FOLDER & SUB-CATEGORIES --- */
+            { name: 'General Transit', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1-.9-2-2-2V7c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h2v3h2v-3h8v3h2v-3h2v-5zM8 7h8v3H8V7zm1 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>' },
+            { name: 'Rapido', parent: 'Transportation', color: '#F9C935', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#F9C935" /><text x="11.5" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="9" font-style="italic" fill="#000000" text-anchor="middle">rapido</text></svg>' },
+            { name: 'Jugnoo', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM5 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5zm5.8-10l2.4-2.4.8.8c1.3 1.3 3 2.1 5.1 2.1V9c-1.5 0-2.7-.6-3.6-1.5l-1.9-1.9c-.5-.4-1-.7-1.6-.7s-1.1.2-1.4.6L8.5 8.4c-.3.4-.5.8-.5 1.3v5H10v-4.4l1.1-1.1L12.2 13v6h2v-7.5l-3.4-1zM19 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/></svg>' },
+            { name: 'Ola', parent: 'Transportation', color: '#cddc39', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#cddc39" /><text x="12" y="16.5" font-family="Arial, sans-serif" font-weight="900" font-size="13" fill="#000000" text-anchor="middle">ola</text></svg>' },
+            { name: 'Uber', parent: 'Transportation', color: '#111111', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#111111" /><path d="M7.5 7v6.5c0 2.48 2.02 4.5 4.5 4.5s4.5-2.02 4.5-4.5V7h-2.5v6.5c0 1.1-.9 2-2 2s-2-.9-2-2V7h-2.5z" fill="#ffffff" /></svg>' },
+            { name: 'Train', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.98-4-8-4zm0 2c4.42 0 6 .54 6 2v2H6V6c0-1.46 1.58-2 6-2zm5.5 11.5c0 .83-.67 1.5-1.5 1.5h-8c-.83 0-1.5-.67-1.5-1.5V12h11v3.5zM12 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>' },
+            { name: 'Bus', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>' },
+            { name: 'Taxi / Auto', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H15V3H9v2H6.5c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.07-.21.27-.35.49-.35h10.48c.22 0 .42.14.49.35L19 11H5z"/></svg>' },
+            /* ---------------------------------------------- */
+            { name: 'Salary', parent: 'Income', color: '#4caf50', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>' },
+            { name: 'Govt. Subsidies', parent: 'Income', color: '#00bcd4', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>' },
+            { name: 'Checks, coupons', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22 10V6a2 2 0 00-2-2H4c-1.1 0-1.99.9-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2z"/></svg>' },
+            { name: 'Child Support', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 9V7c0-1.1-.9-2-2-2h-3v2H8V5H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2v9c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V9c1.1 0 2-.9 2-2z"/></svg>' },
+            { name: 'Dues & grants', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' },
+            { name: 'Gifts', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-4v-2h4zM9 4c.55 0 1 .45 1 1v2H6c0-.55.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>' },
+            { name: 'Interests, dividends', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.6 3l-1.4-1.4-15 15 1.4 1.4 15-15zM7.5 10c1.38 0 2.5-1.12 2.5-2.5S8.88 5 7.5 5 5 6.12 5 7.5 6.12 10 7.5 10zm0-3c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm9 8c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm0 3c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5z"/></svg>' },
+            { name: 'Lending, renting', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>' },
+            { name: 'Lottery, gambling', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H7c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2z"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="7.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>' },
+            { name: 'Refunds (tax, purchase)', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>' },
+            { name: 'Rental income', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3L2 12h3v8h14v-8h3L12 3zm-1 13.5v-1h-1c-.55 0-1-.45-1-1v-1.5c0-.55.45-1 1-1h2v-1h-2v-1.5h1v-1h2v1h1c.55 0 1 .45 1 1v1.5c0 .55-.45 1-1 1h-2v1h2v1.5h-1v1h-2z"/></svg>' },
+            { name: 'Sale', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>' },
+            { name: 'Wage, invoices', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>' },
+            /* --- FOOD & DRINKS FOLDER --- */
+            { name: 'Restaurant', parent: 'Food & Drinks', color: '#ff5722', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>' },
+            { name: 'Zomato', parent: 'Food & Drinks', color: '#E23744', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#E23744"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle" font-style="italic">z</text></svg>' },
+            { name: 'Swiggy', parent: 'Food & Drinks', color: '#FC8019', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#FC8019"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle">S</text></svg>' },
+            /* ----------------------------- */
 
-        const accounts = ['CASH', 'SAVINGS', 'CARD', 'WALLET'];
+            /* --- SHOPPING FOLDER --- */
+            { name: 'Online Shopping', parent: 'Shopping', color: '#03a9f4', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>' },
+            { name: 'Grocery', parent: 'Shopping', color: '#4caf50', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.21 9l-4.38-6.56c-.19-.28-.51-.42-.83-.42-.32 0-.64.14-.83.43L6.79 9H2c-.55 0-1 .45-1 1 0 .09.01.18.04.27l2.54 9.27c.23.84 1 1.46 1.92 1.46h13c.92 0 1.69-.62 1.93-1.46l2.54-9.27L23 10c0-.55-.45-1-1-1h-4.79zM9 9l3-4.4L15 9H9zm3 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>' },
+            { name: 'Amazon', parent: 'Shopping', color: '#232F3E', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#232F3E"/><path d="M6 16c3.5 3 8.5 3 12 0-2 2-6 3-12 0z" fill="#FF9900"/><text x="12" y="14" font-family="Arial, sans-serif" font-weight="bold" font-size="14" fill="#FFFFFF" text-anchor="middle">a</text></svg>' },
+            { name: 'Flipkart', parent: 'Shopping', color: '#2874F0', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#2874F0"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="bold" font-size="16" font-style="italic" fill="#FFE11B" text-anchor="middle">f</text></svg>' },
+            { name: 'JioMart', parent: 'Shopping', color: '#008CCF', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="12" fill="#008CCF" /><text x="12" y="16.5" font-family="Arial, sans-serif" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">Jio</text></svg>' },
+            { name: 'bigBasket', parent: 'Shopping', color: '#84C225', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#84C225"/><text x="12" y="16" font-family="Arial, sans-serif" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">bb</text></svg>' }
+            /* ----------------------------- */
 
-        function openSubModal(type) {
+   ];
+
+
+        const accounts = ['CASH', 'ACCOUNT', 'CARD', 'WALLET'];
+
+                function openSubModal(type) {
             const subModal = document.getElementById('sub-modal');
             const list = document.getElementById('sub-modal-list');
             const title = document.getElementById('sub-modal-title');
@@ -1260,20 +1937,78 @@
                     list.appendChild(div);
                 });
             } else {
-                title.innerText = 'Select Category';
-                categories.forEach(cat => {
-                    const div = document.createElement('div');
-                    div.className = 'category-item';
-                    div.innerHTML = `<div class="category-icon-circle" style="background:${cat.color}">${cat.icon}</div><span>${cat.name}</span>`;
-                    div.onclick = () => { document.getElementById('selected-category').innerText = cat.name.toUpperCase(); closeSubModal(); };
-                    list.appendChild(div);
-                });
+                // Open categories starting at the root level
+                renderCategoryList(null); 
             }
+        }
+
+        // --- Smart Folder & Auto-Tag Logic ---
+        function renderCategoryList(parentName) {
+            const list = document.getElementById('sub-modal-list');
+            const title = document.getElementById('sub-modal-title');
+            list.innerHTML = '';
+
+            if (parentName) {
+                title.innerText = parentName;
+                // Add a Back Button at the top of the folder
+                const backDiv = document.createElement('div');
+                backDiv.className = 'category-item';
+                backDiv.style.background = 'var(--secondary-btn)';
+                backDiv.innerHTML = `<span style="display: flex; align-items: center; margin-right: 5px;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2196f3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></span> <span style="font-weight:600; color:var(--text-main);">Back to main list</span>`;
+                backDiv.onclick = () => renderCategoryList(null);
+                list.appendChild(backDiv);
+            } else {
+                title.innerText = 'Select Category';
+            }
+
+            // Only show main categories OR the specific sub-categories we clicked into
+            const displayCats = categories.filter(c => parentName ? c.parent === parentName : !c.parent);
+
+            displayCats.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-item';
+                
+                // Check if this category acts as a folder
+                const hasChildren = categories.some(c => c.parent === cat.name);
+                const arrowHtml = hasChildren ? `<span style="margin-left:auto; color:var(--text-muted); font-size:16px;">❯</span>` : '';
+                
+                div.innerHTML = `<div class="category-icon-circle" style="background:${cat.color}">${cat.icon}</div><span>${cat.name}</span>${arrowHtml}`;
+                
+                div.onclick = () => { 
+                    if (hasChildren) {
+                        // It's a folder, open it!
+                        renderCategoryList(cat.name); 
+                    } else {
+                        // It's a normal category, save it and close!
+                        document.getElementById('selected-category').innerText = cat.name.toUpperCase(); 
+                        
+                        // --- BULLETPROOF EXPENSE/INCOME SWITCH ---
+                        const typeBtns = document.querySelectorAll('.type-btn');
+                        const txTypeInput = document.getElementById('tx-type');
+                        
+                        // 1. Remove the active color from all buttons
+                        typeBtns.forEach(b => b.classList.remove('active')); 
+                        
+                        // 2. Force the correct button to light up green or red
+                        if (cat.name.toUpperCase() === 'INCOME' || (cat.parent && cat.parent.toUpperCase() === 'INCOME')) {
+                            document.querySelector('.type-btn[data-type="income"]').classList.add('active');
+                            txTypeInput.value = 'income';
+                        } else {
+                            document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
+                            txTypeInput.value = 'expense';
+                        }
+                        // ------------------------------------------
+                        
+                        closeSubModal(); 
+                    }
+                };
+                list.appendChild(div);
+            });
         }
 
         function closeSubModal() { document.getElementById('sub-modal').style.display = 'none'; }
 
-        // --- TRANSACTION TYPE BUTTONS LOGIC ---
+                             // --- TRANSACTION TYPE BUTTONS LOGIC ---
         const typeBtns = document.querySelectorAll('.type-btn');
         const txTypeInput = document.getElementById('tx-type');
 
@@ -1287,6 +2022,138 @@
                 txTypeInput.value = btn.dataset.type;
             };
         });
+            
+                   
+            
+        // --- MODERN INLINE MONTH SELECTOR LOGIC ---
+        const fullMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        // Set initial dates on load
+        const now = new Date();
+        const initMonthVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const initDisplayTxt = `${fullMonthNames[now.getMonth()]} ${now.getFullYear()}`;
+        
+        // CRASH-PROOF CHECKS: Only update text if the HTML exists!
+        const hFilter = document.getElementById('month-filter');
+        const aFilter = document.getElementById('analytics-month-filter');
+        const hDisplay = document.getElementById('home-month-display');
+        const aDisplay = document.getElementById('analytics-month-display');
+
+        if (hFilter) hFilter.value = initMonthVal;
+        if (aFilter) aFilter.value = initMonthVal;
+        if (hDisplay) hDisplay.innerText = initDisplayTxt;
+        if (aDisplay) aDisplay.innerText = initDisplayTxt;
+
+        function shiftMonth(offset, target) {
+            const hiddenInput = document.getElementById(target === 'home' ? 'month-filter' : 'analytics-month-filter');
+            const displaySpan = document.getElementById(target === 'home' ? 'home-month-display' : 'analytics-month-display');
+
+            // Prevent crashes if the buttons were clicked but HTML is missing
+            if (!hiddenInput || !displaySpan) return; 
+
+            // Calculate the new date
+            let currentVal = hiddenInput.value || initMonthVal; 
+            let date = new Date(currentVal + "-01T00:00:00");
+            date.setMonth(date.getMonth() + offset);
+
+            // Format back to YYYY-MM
+            const newYear = date.getFullYear();
+            const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+            hiddenInput.value = `${newYear}-${newMonth}`;
+
+            // Update UI text
+            displaySpan.innerText = `${fullMonthNames[date.getMonth()]} ${newYear}`;
+
+  
+
+            /* --- THEME CLASSES (Whole App Color) --- */
+      
+
+            // Instantly refresh the data
+            if (target === 'home') {
+                render();
+            } else {
+                updateLineChart(1, document.querySelector('.filter-btn.active'));
+            }
+        }
+
+        // --- THEME SELECTOR LOGIC (Restored) ---
+        const themeCircles = document.querySelectorAll('.theme-circle');
+        
+        function applyTheme(themeName) {
+            // Remove any existing theme classes from the body
+            document.body.classList.remove('theme-blue', 'theme-green', 'theme-red', 'theme-yellow');
+            
+            // Add the new one 
+            if (themeName) {
+                document.body.classList.add(`theme-${themeName}`);
+            }
+            
+            // Update the visual active state on the circles
+            themeCircles.forEach(btn => {
+                if (btn.dataset.theme === themeName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Save choice to localStorage
+            localStorage.setItem('app_theme', themeName);
+        }
+
+        // Attach click events to the circles
+        themeCircles.forEach(btn => {
+            btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+        });
+
+        // Check localStorage on load and apply the saved theme (Defaults to 'blue')
+        const savedTheme = localStorage.getItem('app_theme') || 'blue';
+        applyTheme(savedTheme);
+
+        // --- CALCULATOR LOGIC ---
+        let calcExpression = '';
+        const calcDisplay = document.getElementById('calc-display');
+
+        function calcInput(val) {
+            if (!calcDisplay) return;
+            
+            if (val === 'C') {
+                calcExpression = '';
+                calcDisplay.innerText = '0';
+            } else if (val === 'DEL') {
+                calcExpression = calcExpression.slice(0, -1);
+                calcDisplay.innerText = calcExpression || '0';
+            } else if (val === '=') {
+                try {
+                    // Replace visual symbols with actual math operators
+                    let sanitized = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                    // Prevent crazy JS injection by strictly allowing only math characters
+                    if(/^[0-9+\-*/.%() ]+$/.test(sanitized)) {
+                        // Evaluate math
+                        let result = new Function('return ' + sanitized)();
+                        // Rounding to fix Javascript's floating point bugs (e.g. 0.1 + 0.2 = 0.300000004)
+                        result = Math.round(result * 100000000) / 100000000;
+                        calcExpression = String(result);
+                        calcDisplay.innerText = calcExpression;
+                    } else {
+                        calcDisplay.innerText = 'Error';
+                        calcExpression = '';
+                    }
+                } catch (e) {
+                    calcDisplay.innerText = 'Error';
+                    calcExpression = '';
+                }
+            } else {
+                // Add the character to the screen
+                let displayVal = val;
+                if (val === '*') displayVal = '×';
+                if (val === '/') displayVal = '÷';
+                
+                calcExpression += displayVal;
+                calcDisplay.innerText = calcExpression;
+            }
+        }
 
         // Initialize application on load
         window.onload = () => {
@@ -1298,3 +2165,4 @@
     </script>
 </body>
 </html>
+
