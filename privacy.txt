@@ -1,0 +1,1 @@
+Expense Tracker Pro does not collect, store, or share any personal or financial user data. All data is stored locally on the user's device.
