@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Expense Tracker Pro</title>
     <link rel="manifest" href="manifest.json">
-      <link rel="icon" href="icon-192.png" type="image/png">
+   <link rel="icon" href="icon-192.png" type="image/png">
    <link rel="apple-touch-icon" href="icon-192.png">
 
-
     
-    <script src="./chart.js"></script>
-    <script src="./xlsx.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
         * {
@@ -137,26 +139,20 @@
         .section-title span:hover { text-decoration: underline; }
 
         .tx-list { list-style: none; padding: 0; margin: 0; }
-    /* --- DELETE ANIMATION --- */
-.tx-item.slide-out {
-    transform: translateX(-120%);
-    opacity: 0;
-    margin-bottom: -60px; /* Collapses the empty space smoothly */
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-        .tx-item { background: var(--card-bg); padding: 16px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.3s; gap: 10px; }
-            /* --- SLIDE DELETE ANIMATION --- */
+            .tx-item { background: var(--card-bg); padding: 16px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.3s; gap: 10px; }
+        
+                /* --- SLIDE DELETE ANIMATION --- */
         .tx-item.slide-out {
-            transform: translateX(-100%);
+            transform: translateX(-120%);
             opacity: 0;
-            /* This makes the gap collapse smoothly after it slides out */
             margin-bottom: -80px; 
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
             pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
 
         .tx-info { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
         .tx-icon { width: 45px; height: 45px; background: var(--secondary-btn); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
@@ -228,8 +224,7 @@
             transform: translateY(-8px) scale(1.15); 
         }
 
-    .nav-item.active { color: var(--text-main); }
-        .nav-fab-container { position: relative; top: -15px; }
+   
             /* NEW: Plus icon area updated to blue background with white icon */
         .nav-fab { 
             background: #2196f3; /* 🔵 Sets the blue color */
@@ -401,61 +396,10 @@
             .balance-card { max-width: 100%; }
             #page-onboarding { left: 280px; width: calc(100% - 280px); }
         }
-                    /* --- THEME SELECTOR CIRCLES --- */
-        .theme-circle {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            cursor: pointer;
-            padding: 0; 
-            margin: 0;
-            transition: transform 0.2s, border-color 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            -webkit-appearance: none; /* 👇 Fixes the squashed mobile bug! */
-            appearance: none; 
-            display: inline-block; 
-        }
-
-
+                 
                /* --- THEME CLASSES (Whole App Color) --- */
         body { min-height: 100vh; }
 
-        /* Light Mode Themes (Balance card stays default black!) */
-        body.theme-blue {
-            --primary-btn: #2196f3;
-            background-image: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
-        }
-        body.theme-green {
-            --primary-btn: #4caf50;
-            background-image: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
-        }
-        body.theme-red {
-            --primary-btn: #f44336;
-            background-image: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
-        }
-        body.theme-yellow {
-            --primary-btn: #ffb300;
-            background-image: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
-        }
-
-                /* Dark Mode Themes (Pure dark background, ONLY buttons get the theme color) */
-        body.dark-mode.theme-blue { 
-            background-image: none; 
-            --primary-btn: #2196f3; 
-        }
-        body.dark-mode.theme-green { 
-            background-image: none; 
-            --primary-btn: #4caf50; 
-        }
-        body.dark-mode.theme-red { 
-            background-image: none; 
-            --primary-btn: #f44336; 
-        }
-        body.dark-mode.theme-yellow { 
-            background-image: none; 
-            --primary-btn: #ffb300; 
-        }
 
         /* FIX INVISIBLE TEXT: Forces text to white so it is readable on the colored buttons */
         body[class*="theme-"] .btn-black,
@@ -473,11 +417,12 @@
             color: #111111 !important;
         }
 
-        /* Force the Bottom Nav and Plus Button to use the new Theme Colors */
+                /* Force the Bottom Nav and Plus Button to use the new Theme Colors */
         .nav-fab {
             background: var(--primary-btn) !important;
-            color: #ffffff !important;
+            border: var(--fab-border, 1px solid transparent) !important;
         }
+
         body.theme-yellow .nav-fab { 
             color: #111111 !important; 
         }
@@ -538,9 +483,597 @@
         body[class*="theme-"] .calc-equals { background: var(--primary-btn); color: #ffffff !important; }
         body.theme-yellow .calc-equals { color: #111111 !important; }
 
+/* Stop the phone's default text highlighting and copy/paste menu */
+.tx-item, .tx-item * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* The Dimmed Backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+}
+
+/* The Pop-up Card (Starts slightly shrunk and invisible) */
+.edit-card {
+    background: #1c1c1e;
+    width: 90%;
+    max-width: 350px;
+    border-radius: 20px;
+    padding: 20px;
+    transform: scale(0.9); 
+    opacity: 0;
+    /* This cubic-bezier creates the native iOS "spring" bounce */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* When the menu is triggered */
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-overlay.active .edit-card {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* iOS-style Inputs */
+.edit-card input, .edit-card select {
+    width: 100%;
+    background: #2c2c2e;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+/* --- NATIVE PAGE TRANSITION ANIMATIONS --- */
+.container {
+    position: relative;
+    overflow-x: hidden; /* Stops horizontal scrollbars from appearing during a swipe */
+}
+
+.page {
+    width: 100%;
+    background-color: var(--bg-color); /* CRITICAL: Prevents seeing through the page */
+    animation-fill-mode: both;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Hardware GPU Acceleration */
+}
+
+/* The page you are leaving stays still in the background and fades slightly */
+.page.outgoing-left, 
+.page.outgoing-right {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: calc(100% - 40px); /* Matches your container padding perfectly */
+    z-index: 1;
+}
+
+/* The page you are entering slides over the top */
+.page.slide-in-right, 
+.page.slide-in-left {
+    position: relative;
+    z-index: 5;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.05); /* Adds a subtle shadow behind the sliding page */
+}
+body.dark-mode .page.slide-in-right, body.dark-mode .page.slide-in-left {
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+
+/* The buttery smooth iOS timing curves */
+.slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.36, 0.66, 0.04, 1); }
+.slide-in-left { animation: slideInLeft 0.4s cubic-bezier(0.36, 0.66, 0.04, 1); }
+.outgoing-left { animation: slideOutLeft 0.4s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; }
+.outgoing-right { animation: slideOutRight 0.4s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; }
+
+/* The missing fade-in animation for sidebar pages */
+.fade-in { 
+    animation: pageFadeIn 0.3s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; 
+    position: relative;
+    z-index: 5;
+}
+
+@keyframes pageFadeIn {
+    0% { opacity: 0; transform: scale(0.97); }
+    100% { opacity: 1; transform: scale(1); }
+}
 
 
-    </style>
+@keyframes slideInRight {
+    0% { transform: translate3d(100%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideInLeft {
+    0% { transform: translate3d(-100%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideOutLeft {
+    0% { transform: translate3d(0, 0, 0); opacity: 1; filter: brightness(1); }
+    100% { transform: translate3d(-25%, 0, 0); opacity: 0; filter: brightness(0.8); }
+}
+@keyframes slideOutRight {
+    0% { transform: translate3d(0, 0, 0); opacity: 1; filter: brightness(1); }
+    100% { transform: translate3d(25%, 0, 0); opacity: 0; filter: brightness(0.8); }
+}
+
+
+/* --- FULL SCREEN NATIVE FIX --- */
+
+/* 1. Remove the gap from the outer container */
+.container { 
+    padding: 0 !important; 
+}
+
+/* 2. Move the padding inside the page and make it full screen */
+.page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    padding-bottom: 120px;
+    background-color: var(--bg-color); 
+}
+
+/* 3. Fix the sliding position so it touches the edges of the screen */
+.page.outgoing-left, 
+.page.outgoing-right {
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* 4. Apply your beautiful themes directly to the sliding pages! */
+body.theme-blue .page { background-image: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%); }
+body.theme-green .page { background-image: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%); }
+body.theme-red .page { background-image: linear-gradient(135deg, #ffebee 0%, #ffffff 100%); }
+body.theme-yellow .page { background-image: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); }
+
+/* Ensure dark mode stays beautifully dark */
+body.dark-mode .page { background-image: none !important; background-color: var(--bg-color); }
+
+/* --- FAB GLOW OVERRIDE --- */
+:root { 
+    --primary-glow: rgba(17, 17, 17, 0.3); 
+}
+body.theme-blue { 
+    --primary-glow: rgba(33, 150, 243, 0.4) !important; 
+}
+body.theme-green { 
+    --primary-glow: rgba(76, 175, 80, 0.4) !important; 
+}
+body.theme-red { 
+    --primary-glow: rgba(244, 67, 54, 0.4) !important; 
+}
+body.theme-yellow { 
+    --primary-glow: rgba(255, 179, 0, 0.4) !important; 
+}
+
+/* The 'button.nav-fab' selector combined with '!important' guarantees this wins */
+button.nav-fab {
+    box-shadow: 0 8px 18px var(--primary-glow) !important;
+}
+
+/* --- THE ULTIMATE COPY/PASTE BLOCKER --- */
+/* Makes the text invisible to the phone's touch-selection engine */
+.tx-details strong, 
+.tx-details small, 
+.tx-val, 
+.tx-icon,
+.tx-info {
+    pointer-events: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* --- MODERN COLOR PICKER UI --- */
+.modern-color-picker {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(0,0,0,0.1);
+    border: 2px solid var(--card-bg);
+    outline: 2px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.modern-color-picker:active { transform: scale(0.9); }
+
+.color-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    pointer-events: none; 
+}
+
+/* Smart text contrast for buttons */
+.btn-black, .btn-start, .filter-btn.active, .type-btn[data-type="transfer"].active, .nav-fab, .calc-equals {
+    color: var(--btn-text-color, #ffffff) !important;
+}
+
+/* Apply the dynamic background gradient */
+.page { background-image: var(--theme-bg-gradient, none) !important; }
+body.dark-mode .page { background-image: none !important; }
+
+/* Force UI elements to obey the new custom color */
+.icon-btn.floating-pill, .page-title-pill h2, .month-text, .month-arrow, .calc-op {
+    color: var(--primary-btn) !important;
+}
+.calc-equals { background: var(--primary-btn) !important; }
+
+/* --- PREMIUM COLOR SWATCHES --- */
+.color-swatch {
+    width: 42px; 
+    height: 42px; 
+    border-radius: 50%; 
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid var(--card-bg);
+    outline: 2px solid transparent;
+}
+.color-swatch:active { transform: scale(0.85); }
+#custom-color-modal.active { opacity: 1; visibility: visible; }
+
+/* --- PREMIUM ROUNDED PICKR UI --- */
+
+/* 1. Force the preview buttons to be perfect circles */
+.pcr-button {
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    border: 2px solid var(--card-bg) !important;
+    outline: 2px solid var(--border) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    overflow: hidden !important; 
+}
+.pcr-button::after, .pcr-button::before {
+    border-radius: 50% !important;
+}
+
+/* 2. Center the modal on the screen and round the edges */
+.pcr-app {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    border-radius: 28px !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5) !important;
+    padding: 15px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg) !important; 
+    width: 280px !important; /* Keeps it a nice consistent size */
+}
+
+/* 3. Force the little preset swatches into PERFECT circles */
+.pcr-app .pcr-swatches > button,
+.pcr-app .pcr-swatches > button::before,
+.pcr-app .pcr-swatches > button::after {
+    border-radius: 50% !important;
+    width: 24px !important;  /* By forcing identical width/height... */
+    height: 24px !important; /* ...50% radius makes a perfect circle! */
+}
+
+/* 4. Round the big gradient palette box */
+.pcr-color-palette {
+    border-radius: 16px !important;
+}
+
+/* 5. Restructure the bottom row (Stack Input and Save Button) */
+.pcr-interaction {
+    flex-wrap: wrap !important; /* This allows the buttons to stack on new lines */
+}
+
+/* Hide the annoying 'HEXA' toggle button to make it cleaner */
+.pcr-interaction .pcr-type {
+    display: none !important;
+}
+
+/* Round the text input and make it full width */
+.pcr-interaction input {
+    border-radius: 12px !important;
+    border: 1px solid var(--border) !important;
+    font-family: inherit !important;
+    color: var(--text-main) !important;
+    background: var(--bg-color) !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    text-align: center !important;
+    margin-top: 10px !important;
+}
+
+
+        
+/* Make the Save button big, full-width, and placed below the input */
+.pcr-interaction .pcr-save {
+    border-radius: 12px !important;
+    background: #0A84FF !important; /* Sleek iOS Blue */
+    font-weight: 600 !important;
+    color: white !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    margin-top: 10px !important;
+    margin-left: 0 !important;
+    padding: 12px !important; 
+}
+
+
+/* --- SMART CONTRAST FIXES --- */
+/* Forces Dashboard text to flip black/white based on JS calculation */
+.balance-card { color: var(--dash-text-main, #ffffff) !important; }
+.balance-card h4, .balance-card .stat-item h4 { color: var(--dash-text-muted, #a1a1a1) !important; }
+
+/* Forces Icons and Titles to flip if the chosen Theme Color is invisible */
+.icon-btn.floating-pill, 
+.page-title-pill h2, 
+.month-text, 
+.month-arrow, 
+.calc-op, 
+.nav-item.active {
+    color: var(--safe-accent-text, var(--primary-btn)) !important;
+}
+
+/* --- NATIVE CALENDAR TRIGGER --- */
+.calendar-trigger-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 6px 16px 6px 6px; /* Extra padding on right, tight on left for the icon */
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden; /* Keeps the invisible input contained */
+}
+
+.calendar-trigger-btn span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    user-select: none;
+}
+
+/* The Invisible Native Picker */
+.calendar-trigger-btn input[type="month"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* --- SLEEK NATIVE DATE PICKER --- */
+.sleek-date-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #1c1c1e; /* Matches the dark image */
+    border-radius: 40px;
+    padding: 6px 16px 6px 6px;
+    gap: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.05);
+    cursor: pointer;
+    overflow: hidden;
+    height: 50px;
+}
+
+body:not(.dark-mode) .sleek-date-picker {
+    background: var(--card-bg);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+}
+
+.sleek-date-circle {
+    width: 38px;
+    height: 38px;
+    background: #111111;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 500;
+    color: #e5e5ea;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+}
+
+body:not(.dark-mode) .sleek-date-circle {
+    background: var(--bg-color);
+    color: var(--text-main);
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.05), inset 0 1px 2px #ffffff;
+    border: 1px solid var(--border);
+}
+
+.sleek-date-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.sleek-day-name {
+    font-size: 13px;
+    color: #8e8e93;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.sleek-month-name {
+    font-size: 15px;
+    color: #ffffff;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+body:not(.dark-mode) .sleek-month-name { color: var(--text-main); }
+
+.sleek-chevron {
+    width: 18px;
+    height: 18px;
+    color: #8e8e93;
+    margin-left: 5px;
+}
+
+/* The Invisible Native Trigger */
+.sleek-date-picker input[type="date"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+/* Stretches the tap-target on Android/iOS to cover the whole button */
+.sleek-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* --- NOTIFICATION BELL ANIMATION --- */
+@keyframes swingRing {
+    0% { transform: rotate(0deg); }
+    15% { transform: rotate(25deg); }
+    30% { transform: rotate(-25deg); }
+    45% { transform: rotate(15deg); }
+    60% { transform: rotate(-15deg); }
+    75% { transform: rotate(5deg); }
+    85% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.ringing svg {
+    animation: swingRing 0.6s cubic-bezier(0.36, 0.66, 0.04, 1);
+    transform-origin: top center; /* Makes it swing from the top like a real bell */
+}
+
+/* --- NOTIFICATIONS SIDE PANEL --- */
+.notification-panel {
+    position: fixed;
+    top: 0;
+    right: -320px; /* Hidden off-screen to the right */
+    width: 320px;
+    max-width: 85vw;
+    height: 100%;
+    background: var(--sidebar-bg);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.05);
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark-mode .notification-panel { box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
+.notification-panel.open { right: 0; }
+
+.noti-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.noti-item {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--secondary-btn);
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary-btn);
+}
+
+.noti-item h4 { margin: 0 0 6px 0; font-size: 15px; color: var(--text-main); }
+.noti-item p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.noti-item small { display: block; margin-top: 10px; font-size: 11px; color: var(--text-muted); opacity: 0.8; font-weight: 600; text-transform: uppercase; }
+
+        /* --- NOTIFICATION SLIDE & UNDO TOAST --- */
+        .noti-item {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .noti-item.slide-out {
+            transform: translateX(120%) !important;
+            opacity: 0 !important;
+            margin-bottom: -80px; /* Collapses the gap gracefully */
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            border-left-width: 0 !important;
+            pointer-events: none;
+            transition: transform 0.25s ease-in, opacity 0.25s ease-in, margin-bottom 0.3s ease-in-out 0.1s, padding 0.3s ease-in-out 0.1s;
+        }
+
+        #undo-toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            visibility: hidden;
+            background: var(--text-main);
+            color: var(--bg-color);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.4s cubic-bezier(0.36, 0.66, 0.04, 1);
+        }
+
+        #undo-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .undo-btn {
+            background: none;
+            border: none;
+            color: #0A84FF; /* iOS Blue */
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 0;
+        }
+
+   </style>
 </head>
 <body>
 
@@ -578,29 +1111,74 @@
             <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> Settings
         </div>
     </div>
+<div id="notification-panel" class="notification-panel">
+    <div class="noti-header">
+        <div class="page-title-pill floating-pill" style="margin: 0; padding: 0 15px;">
+            <h2>Alerts</h2>
+        </div>
+        <button class="icon-btn" onclick="toggleNotifications()" style="background: var(--secondary-btn); border-radius: 50%; width: 40px; height: 40px; border: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    
+        <div id="noti-container" style="flex: 1; overflow-y: auto; padding-right: 5px;">
+        <div class="noti-item">
+
+            <h4>Welcome to Expense Pro! 🎉</h4>
+            <p>Start tracking your expenses and take control of your finances today.</p>
+            <small>Just now</small>
+        </div>
+        <div class="noti-item" style="border-left-color: var(--income-color);">
+            <h4>Backup Recommended</h4>
+            <p>Don't forget to use the "Import Data" button if you switch devices to keep your records safe.</p>
+            <small>System Alert</small>
+        </div>
+    </div>
+</div>
 
     <div class="container" id="main-app-container">
         
         <div id="page-home" class="page">
-            <div class="header">
-                <div class="header-left">
-                    <button class="icon-btn floating-pill" id="menu-trigger">
-                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 3.0; stroke-linecap: round;">
-                            <line x1="5" y1="10" x2="19" y2="10"></line>
-                            <line x1="5" y1="15" x2="13" y2="15"></line>
-                        </svg>
-                    </button>
-                    <div class="page-title-pill floating-pill">
-                        <h2>Home</h2>
-                    </div>
-                </div>
-                <div class="month-selector-modern">
-                    <button class="month-arrow" onclick="shiftMonth(-1, 'home')">❮</button>
-                    <span class="month-text" id="home-month-display">March 2026</span>
-                    <button class="month-arrow" onclick="shiftMonth(1, 'home')">❯</button>
-                    <input type="hidden" id="month-filter">
-                </div>
-       </div>
+          <div class="header">
+    <div class="header-left">
+              <button class="icon-btn floating-pill" id="menu-trigger">
+            <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round;">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="15" x2="15" y2="15"></line>
+       
+            </svg>
+        </button>
+
+        <div class="page-title-pill floating-pill">
+            <h2>Home</h2>
+        </div>
+    </div>
+
+    <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+        
+        <div class="sleek-date-picker">
+            <div class="sleek-date-circle" id="sleek-day-num">31</div>
+            <div class="sleek-date-text">
+                <span class="sleek-day-name" id="sleek-day-name">Tue</span>
+                <span class="sleek-month-name" id="sleek-month-name">December</span>
+            </div>
+            <svg class="sleek-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <input type="date" id="native-date-trigger" onchange="syncSleekDate(this.value)">
+            <input type="hidden" id="month-filter">
+        </div>
+
+        <button class="icon-btn floating-pill" id="bell-btn" onclick="toggleNotifications()">
+    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+</button>
+
+    </div>
+</div>
+
 
             <div class="balance-card">
                 <h4>Total Balance</h4>
@@ -624,28 +1202,32 @@
                 <button class="btn btn-black" onclick="document.getElementById('file-upload').click()">Import Data</button>
             </div>
 
-            <div class="section-title" style="margin-top: 10px;">
-                <h3>Statistics</h3>
+                      <div style="display: flex; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Statistics</h2>
+                </div>
             </div>
+
             
             <div class="chart-container" style="display: flex; justify-content: center; padding: 20px;">
                 <canvas id="homeBarChart" height="200"></canvas>
             </div> 
 
-            <div class="search-filter-container" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <div style="flex: 1; position: relative;">
-                    <svg style="position: absolute; left: 15px; top: 13px; width: 18px; height: 18px; color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" id="search-input" placeholder="Search transactions..." style="width: 100%; padding: 12px 12px 12px 42px; border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main); margin: 0; outline: none;">
-                </div>
-                <button class="icon-btn" onclick="openFilterModal()" style="width: 44px; height: 44px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); cursor: pointer; transition: 0.2s;">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
-                </button>
-            </div>
+           
         
-            <div class="section-title">
-                <h3>Transactions</h3>
-                <span onclick="showPage('page-statement', document.querySelectorAll('.nav-item')[3])">See All</span>
-            </div>
+                                   <div class="section-title" style="padding: 0 5px;">
+    <div class="page-title-pill floating-pill">
+        <h2>Transactions</h2>
+    </div>
+
+    <div class="page-title-pill floating-pill" 
+         onclick="showPage('page-statement', document.querySelectorAll('.nav-item')[2])" 
+         style="cursor: pointer; padding: 0 15px;">
+        <h2 style="font-size: 14px;">See All</h2>
+    </div>
+</div>
+
+
 
             <ul class="tx-list" id="tx-list"></ul>
         </div>
@@ -653,26 +1235,16 @@
         <div id="page-graph" class="page" style="display: none;">
             <div class="header" style="margin-bottom: 5px;">
                 <div class="header-left">
-                    <button class="icon-btn floating-pill" onclick="document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').style.display='block';">
-                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 3.0; stroke-linecap: round;">
-                            <line x1="5" y1="10" x2="19" y2="10"></line>
-                            <line x1="5" y1="15" x2="13" y2="15"></line>
-                        </svg>
-                    </button>
+                    
                     <div class="page-title-pill floating-pill">
                         <h2>Balance Trend</h2>
                     </div>
                 </div>
-                <div class="month-selector-modern">
-                    <button class="month-arrow" onclick="shiftMonth(-1, 'analytics')">❮</button>
-                    <span class="month-text" id="analytics-month-display">March 2026</span>
-                    <button class="month-arrow" onclick="shiftMonth(1, 'analytics')">❯</button>
-                    <input type="hidden" id="analytics-month-filter">
-                </div>
+ 
 
             </div>
             
-            <p style="color: var(--text-muted); font-size: 14px; margin-top: 0; margin-bottom: 20px; padding-left: 5px;">Do I have more money than before?</p>
+            <p style="color: var(--text-muted); font-size: 18px; margin-top: 0; margin-bottom: 20px; padding-left: 5px;">Do I have more money than before?</p>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding: 0 5px;">
                 <div>
@@ -697,13 +1269,34 @@
             <div class="chart-container" style="padding: 20px 10px 10px;">
                 <canvas id="analyticsLineChart" height="220"></canvas>
             </div>
-            <div class="section-title" style="margin-top: 25px; padding: 0 5px;">
-                <h3 style="font-size: 16px;">Income Breakdown</h3>
+                       <div style="display: flex; margin-top: 25px; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Income Breakdown</h2>
+                </div>
             </div>
+
             
             <div class="chart-container" style="display: flex; justify-content: center; padding: 20px; margin-bottom: 30px;">
                 <canvas id="incomeDoughnutChart" height="200"></canvas>
             </div>
+                                    <div style="display: flex; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Spending Trends</h2>
+                </div>
+            </div>
+
+            
+            <div class="time-filters" id="spending-time-filters" style="margin-bottom: 15px;">
+                <button class="filter-btn" onclick="updateSpendingChart('daily', this)">Daily</button>
+                <button class="filter-btn" onclick="updateSpendingChart('weekly', this)">Weekly</button>
+                <button class="filter-btn active" onclick="updateSpendingChart('monthly', this)">Monthly</button>
+                <button class="filter-btn" onclick="updateSpendingChart('yearly', this)">Yearly</button>
+            </div>
+
+            <div class="chart-container" style="padding: 20px 10px 10px; margin-bottom: 30px;">
+                <canvas id="spendingBarChart" height="220"></canvas>
+            </div>
+
         </div>
                 <div id="page-calculator" class="page" style="display: none;">
             <div class="header">
@@ -793,17 +1386,32 @@
                     </span>
                 </label>
             </div>
-            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
-                <span style="margin-bottom: 15px;">Theme Color</span>
-                <div style="display: flex; gap: 15px;">
-                    <button class="theme-circle" data-theme="blue" style="background: #2196f3;"></button>
-                    <button class="theme-circle" data-theme="green" style="background: #4caf50;"></button>
-                    <button class="theme-circle" data-theme="red" style="background: #f44336;"></button>
-                    <button class="theme-circle" data-theme="yellow" style="background: #ffb300;"></button>
-                     </div>
+                                 <div class="setting-row">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-weight: 500;">Theme Color</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Custom primary accent</span>
+                </div>
+                <div id="theme-pickr-container"></div>
             </div>
 
-            <div class="setting-row" style="cursor: pointer;" onclick="showPage('page-logs')">
+            <div class="setting-row">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-weight: 500;">Dashboard Color</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Top balance card</span>
+                </div>
+                <div id="dash-pickr-container"></div>
+            </div>
+
+            
+
+                        <div class="setting-row" style="cursor: pointer;" onclick="window.open('https://exbonus.github.io/ExpenseTracker/privacy.txt', '_blank')">
+                <span>Privacy Policy</span>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            </div>
+
+
+          
+           <div class="setting-row" style="cursor: pointer;" onclick="showPage('page-logs')">
                 <span>Recently Deleted (Logs)</span>
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             </div>
@@ -909,14 +1517,15 @@
         </div>
     </div>
 
-    <div id="sub-modal" class="modal-overlay" style="display:none; z-index: 1001;">
+        <div id="sub-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+
         <div class="modal-content sub-modal-content">
             <div class="header" style="padding: 10px 0;">
                 <h3 id="sub-modal-title" style="margin:0;">Select</h3>
-                                        <button class="icon-btn" onclick="closeSubModal()" style="display: flex; align-items: center; justify-content: center;">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--expense-color)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            <button onclick="closeSubModal()" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: none; border-radius: 50%; background: var(--secondary-btn); color: var(--text-muted); cursor: pointer; transition: transform 0.2s;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-                
+                   
             </div>
             <div id="sub-modal-list" class="scroll-list">
             </div>
@@ -982,6 +1591,41 @@
             <button class="btn btn-gray" style="width:100%;" onclick="clearFilters()">Clear Filters</button>
         </div>
     </div>
+ <div id="editOverlay" class="modal-overlay" onclick="closeEditModal()">
+    <div class="edit-card" onclick="event.stopPropagation()">
+        <h3 style="margin-top:0; color:white; text-align:center;">Edit Transaction</h3>
+        
+        <input type="text" id="editName" placeholder="Name">
+        <input type="number" id="editAmount" placeholder="Amount">
+        
+        <select id="editType">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="transfer">Transfer</option>
+        </select>
+        
+        <select id="editAccount">
+            <option value="CASH">Cash</option>
+            <option value="ACCOUNT">Account</option>
+            <option value="CARD">Card</option>
+            <option value="WALLET">Wallet</option>
+        </select>
+
+        <select id="editCategory">
+            </select>
+        
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button onclick="saveEdit()" style="flex:1; background:#0A84FF; color:white; border:none; padding:12px; border-radius:10px; font-weight:600; font-size:16px;">Save</button>
+        </div>
+    </div>
+</div>
+
+    <div id="undo-toast">
+        
+        <button class="undo-btn" onclick="undoNotification()">Undo</button>
+    </div>
+
+
     
     <script>
         // --- 1. APP INITIALIZATION & DATA LOADING ---
@@ -1034,11 +1678,62 @@
 
         // --- 3. NAVIGATION & SETTINGS ---
         if(menuTrigger) menuTrigger.onclick = () => { sidebar.classList.add('open'); overlay.style.display = 'block'; };
-        overlay.onclick = () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; };
+        
 
-        function showPage(pageId, navElement = null) {
-            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
-            document.getElementById(pageId).style.display = 'block';
+                                function showPage(pageId, navElement = null, forceDirection = 'none') {
+            const pages = document.querySelectorAll('.page');
+            const mainNavPages = ['page-home', 'page-graph', 'page-statement'];
+            
+                       // 1. Find the current page we are leaving
+            let currentPageId = null;
+            pages.forEach(page => {
+                if (page.style.display === 'block') { // REMOVED the buggy "&& page.id !== pageId"
+                    currentPageId = page.id;
+                }
+            });
+
+            if (currentPageId === pageId) return; // Do nothing if tapping the same tab
+
+            let direction = forceDirection;
+
+            // Calculate direction if tapped from bottom nav
+            if (direction === 'none' && currentPageId && navElement) {
+                const curIdx = mainNavPages.indexOf(currentPageId);
+                const newIdx = mainNavPages.indexOf(pageId);
+                if (curIdx !== -1 && newIdx !== -1) {
+                    direction = newIdx > curIdx ? 'right' : 'left'; 
+                }
+            }
+
+            const oldPage = currentPageId ? document.getElementById(currentPageId) : null;
+            const newPage = document.getElementById(pageId);
+
+            // 2. Set up the Old Page (DO NOT HIDE IT YET!)
+            if (oldPage) {
+                oldPage.classList.remove('slide-in-right', 'slide-in-left', 'fade-in', 'outgoing-left', 'outgoing-right');
+                if (direction === 'right') {
+                    oldPage.classList.add('outgoing-left'); // Pushed left
+                } else if (direction === 'left') {
+                    oldPage.classList.add('outgoing-right'); // Pushed right
+                } else {
+                    oldPage.style.display = 'none'; // Fallback for sidebar
+                }
+            }
+
+            // 3. Set up the New Page (Slide it over the top)
+            newPage.style.display = 'block';
+            newPage.classList.remove('slide-in-right', 'slide-in-left', 'fade-in', 'outgoing-left', 'outgoing-right');
+            
+            requestAnimationFrame(() => {
+                if (direction === 'right') {
+                    newPage.classList.add('slide-in-right');
+                } else if (direction === 'left') {
+                    newPage.classList.add('slide-in-left');
+                } else {
+                    newPage.classList.add('fade-in');
+                }
+            });
+
             sidebar.classList.remove('open');
             overlay.style.display = 'none';
 
@@ -1047,19 +1742,35 @@
                 navElement.classList.add('active');
             }
 
-            if(pageId === 'page-home') render();
-            if(pageId === 'page-graph') updateLineChart(1, document.querySelector('.filter-btn.active'));
-            if(pageId === 'page-logs') render();
-        }
+            // 4. THE MAGIC TRICK: Wait 400ms for the slide to finish BEFORE hiding the old page and redrawing the charts!
+            setTimeout(() => {
+                if (oldPage) {
+                    oldPage.style.display = 'none';
+                    oldPage.classList.remove('outgoing-left', 'outgoing-right');
+                }
+                
+                                        // Do the heavy rendering invisibly in the background
+            if(pageId === 'page-home') resetDateToToday();
+            
+            // This single render() now perfectly handles the Home list, Statement list, Logs list, AND all Charts!
+            render(); 
+        }, 400); 
+
+    }
+
 
         const darkToggle = document.getElementById('dark-toggle');
         const hideToggle = document.getElementById('hide-toggle');
 
-        darkToggle.onchange = () => {
+                darkToggle.onchange = () => {
             document.body.classList.toggle('dark-mode', darkToggle.checked);
             localStorage.setItem('dark', darkToggle.checked);
             updateHomeChart();
+            
+            // Recalculate smart text contrast when switching modes!
+            applyCustomTheme(localStorage.getItem('custom_theme_color') || '#2196f3'); 
         };
+        
         hideToggle.onchange = () => {
             document.body.classList.toggle('hide-amounts', hideToggle.checked);
             localStorage.setItem('hide', hideToggle.checked);
@@ -1206,7 +1917,7 @@
                 transactions.push(tx);
                 localStorage.setItem('tx_pro', JSON.stringify(transactions));
                 toggleModal(false); 
-                
+                resetDateToToday();
                 // NEW UX TWEAK: Auto-switch the home page to the month of the newly added transaction!
                 const txMonth = tx.date.substring(0, 7); // Extracts "YYYY-MM" from "YYYY-MM-DD"
                 const monthFilter = document.getElementById('month-filter');
@@ -1228,22 +1939,20 @@
         function executeDelete() {
     const idx = transactions.findIndex(t => String(t.id) === String(txToDelete));
     if(idx > -1) {
-        // 1. Close the modal immediately so the user sees the animation
         closeDeleteModal();
         
-        // 2. Play the Shhsh sound
-        // Replace this URL with 'shhsh.mp3' if you download your own sound file
         const shushSound = new Audio('Shwish.mp3'); 
         shushSound.play().catch(e => console.log('Audio failed to play (browser auto-play policy):', e));
 
-        // 3. Find the exact list item in the DOM and animate it
-        const liElement = document.getElementById(`tx-elm-${txToDelete}`);
+        // Find the specific list item on BOTH the Home page and Statement page
+        const homeEl = document.getElementById(`tx-row-home-${txToDelete}`);
+        const stmtEl = document.getElementById(`tx-row-statement-${txToDelete}`);
         
-        if (liElement) {
-            // Trigger the CSS slide-out
-            liElement.classList.add('slide-out');
-            
-            // 4. Wait 400ms for the animation to finish before updating data and re-rendering
+        // Add the slide-out animation to whichever ones exist
+        if (homeEl) homeEl.classList.add('slide-out');
+        if (stmtEl) stmtEl.classList.add('slide-out');
+        
+        if (homeEl || stmtEl) {
             setTimeout(() => {
                 const tx = transactions.splice(idx, 1)[0];
                 tx.deletedAt = Date.now();
@@ -1253,7 +1962,7 @@
                 render();
             }, 400); 
         } else {
-            // Fallback just in case the element wasn't found
+            // Fallback if no elements were found
             const tx = transactions.splice(idx, 1)[0];
             tx.deletedAt = Date.now();
             deletedTransactions.push(tx);
@@ -1261,11 +1970,11 @@
             localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
             render();
         }
-    }
-         else {
+    } else {
         closeDeleteModal();
     }
 }
+
 
         let txToRestore = null;
         function openRestoreModal(id) { txToRestore = id; document.getElementById('restore-modal').style.display = 'flex'; }
@@ -1318,6 +2027,88 @@
             // If it's older than yesterday, format it as "Feb 3 2026"
             return txDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).replace(',', '');
         }
+// --- LONG PRESS TO EDIT LOGIC ---
+let pressTimer;
+let currentEditId = null;
+
+function startPress(id) {
+    pressTimer = setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate(40);
+        openEditModal(id);
+    }, 450);
+}
+
+function cancelPress() {
+    clearTimeout(pressTimer);
+}
+
+function openEditModal(id) {
+    currentEditId = id;
+    const t = transactions.find(item => String(item.id) === String(id));
+    if(!t) return;
+    
+    document.getElementById('editName').value = t.title;
+    document.getElementById('editAmount').value = Math.abs(t.amount);
+    
+    // Set the Account dropdown
+    document.getElementById('editAccount').value = (t.account || 'CASH').toUpperCase();
+
+    // Set the Type dropdown (fallback to checking the amount if type is missing)
+    const derivedType = t.type || (t.amount < 0 ? 'expense' : 'income');
+    document.getElementById('editType').value = derivedType;
+    
+    // Dynamically build the Category dropdown
+    const catSelect = document.getElementById('editCategory');
+    catSelect.innerHTML = ''; 
+    
+    categories.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.innerText = c.name;
+        catSelect.appendChild(opt);
+    });
+    
+    const matchingOption = Array.from(catSelect.options).find(opt => opt.value.toUpperCase() === (t.category || '').toUpperCase());
+    if (matchingOption) catSelect.value = matchingOption.value;
+    
+    document.getElementById('editOverlay').classList.add('active');
+}
+
+
+
+function closeEditModal() {
+    document.getElementById('editOverlay').classList.remove('active');
+    currentEditId = null;
+}
+
+function saveEdit() {
+    if(!currentEditId) return;
+    const t = transactions.find(item => String(item.id) === String(currentEditId));
+    if(!t) return;
+
+    // Grab all the new values from the modal
+    t.title = document.getElementById('editName').value;
+    const newAmt = parseFloat(document.getElementById('editAmount').value);
+    t.type = document.getElementById('editType').value;
+    t.account = document.getElementById('editAccount').value;
+    t.category = document.getElementById('editCategory').value.toUpperCase();
+
+    // Force the amount to be negative if 'Expense' is selected, positive otherwise
+    t.amount = t.type === 'expense' ? -Math.abs(newAmt) : Math.abs(newAmt);
+
+    // Save and refresh the UI
+    localStorage.setItem('tx_pro', JSON.stringify(transactions));
+    render();
+    closeEditModal();
+}
+
+function deleteTransaction() {
+    if(!currentEditId) return;
+    // Hook directly into your existing beautiful delete animation!
+    txToDelete = currentEditId;
+    closeEditModal();
+    executeDelete(); 
+}
 
                 // --- 6. RENDER & UI HELPERS ---
         function createTxHTML(t, mode = 'home') {
@@ -1357,7 +2148,15 @@
             }
 
             return `
-                <li class="tx-item" id="tx-row-${t.id}" ${actionHtml}>
+               <li class="tx-item" id="tx-row-${mode}-${t.id}" ${actionHtml}
+
+                     ontouchstart="startPress('${t.id}')" 
+                     ontouchend="cancelPress()" 
+                     ontouchmove="cancelPress()" 
+                     onmousedown="startPress('${t.id}')" 
+                     onmouseup="cancelPress()"
+                     onmouseleave="cancelPress()"
+           oncontextmenu="event.preventDefault(); return false;">
                    <div class="tx-info">
                         <div class="tx-icon" style="background:${cat.color}20;color:${cat.color}">${cat.icon}</div>
                         <div class="tx-details">
@@ -1551,14 +2350,16 @@
                         document.getElementById('total-income').innerText = `₹${inc.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
             document.getElementById('total-expense').innerText = `₹${exp.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
             
-            updateHomeChart(filtered);
-            if(document.getElementById('page-graph') && document.getElementById('page-graph').style.display === 'block') {
-                updateLineChart(1, document.querySelector('.filter-btn.active'));
-            }
+                    updateHomeChart(filtered);
+        if(document.getElementById('page-graph') && document.getElementById('page-graph').style.display === 'block') {
+            updateLineChart(1, document.querySelector('.filter-btn.active'));
+            updateSpendingChart(); 
         }
-            
+    }
+ 
                 // --- 7. CHARTS ---
-        let homeChart = null, lineChart = null, incomeChart = null;
+               let homeChart = null, lineChart = null, incomeChart = null, spendingChart = null;
+
 
 
                 function updateHomeChart(filtered = transactions) {
@@ -1586,6 +2387,7 @@
             if(homeChart) homeChart.destroy();
 
             const isDark = document.body.classList.contains('dark-mode');
+                    
             
             // --- NEW: Empty State "Shadow Donut" Logic ---
             let finalLabels = labels;
@@ -1639,6 +2441,133 @@
                 }
             });
                 }
+                       function updateSpendingChart(viewType, btnElement = null) {
+            if (btnElement) {
+                const container = btnElement.closest('.time-filters');
+                container.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            } else {
+                const activeBtn = document.querySelector('#spending-time-filters .filter-btn.active');
+                if (activeBtn) viewType = activeBtn.innerText.toLowerCase();
+                else viewType = 'monthly';
+            }
+
+            const canvas = document.getElementById('spendingBarChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const isDark = document.body.classList.contains('dark-mode');
+            const expenseColor = getComputedStyle(document.body).getPropertyValue('--expense-color').trim() || '#ef4444';
+
+            const expenses = transactions.filter(t => t.type === 'expense' || (t.amount < 0 && !t.type));
+            
+            let labels = [];
+            let dataPoints = [];
+            
+            // Renamed to chartNow to prevent any future naming collisions!
+            const chartNow = new Date();
+
+            if (viewType === 'daily') {
+                for(let i = 6; i >= 0; i--) {
+                    let d = new Date(chartNow); d.setDate(chartNow.getDate() - i);
+                    let dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    let sum = expenses.filter(t => t.date === dateStr).reduce((a, b) => a + Math.abs(b.amount), 0);
+                    labels.push(d.toLocaleDateString('default', { weekday: 'short' }));
+                    dataPoints.push(sum);
+                }
+            } else if (viewType === 'weekly') {
+                for(let i = 3; i >= 0; i--) {
+                    let end = new Date(chartNow); end.setDate(chartNow.getDate() - (i*7));
+                    let start = new Date(end); start.setDate(start.getDate() - 6);
+                    start.setHours(0,0,0,0);
+                    end.setHours(23,59,59,999);
+                    
+                    let sum = expenses.filter(t => {
+                        let td = new Date(t.date);
+                        return td >= start && td <= end;
+                    }).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(`${start.getDate()} ${start.toLocaleDateString('default',{month:'short'})}`);
+                    dataPoints.push(sum);
+                }
+            } else if (viewType === 'yearly') {
+                for(let i = 3; i >= 0; i--) {
+                    let y = chartNow.getFullYear() - i;
+                    let sum = expenses.filter(t => t.date.startsWith(y.toString())).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(y.toString());
+                    dataPoints.push(sum);
+                }
+            } else { 
+                for(let i = 5; i >= 0; i--) {
+                    let d = new Date(chartNow.getFullYear(), chartNow.getMonth() - i, 1);
+                    let monthPrefix = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    let sum = expenses.filter(t => t.date.startsWith(monthPrefix)).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(d.toLocaleDateString('default', { month: 'short' }));
+                    dataPoints.push(sum);
+                }
+            }
+
+            if(spendingChart) spendingChart.destroy();
+
+            // 1. Create a modern fading vertical gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+            gradient.addColorStop(0, expenseColor);
+            gradient.addColorStop(1, isDark ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.15)');
+
+            spendingChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Spends',
+                        data: dataPoints,
+                        backgroundColor: gradient,
+                        hoverBackgroundColor: expenseColor, // Turns solid on tap/hover
+                        borderRadius: 20,     // Creates the pill shape
+                        borderSkipped: false, // Forces the bottom to be rounded too
+                        barThickness: 14      // Sleek, uniform bar width
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false // Makes tooltips easier to trigger on mobile
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#2c2c2e' : '#111111',
+                            titleFont: { size: 13, family: "system-ui", weight: 'normal', color: '#a1a1a1' },
+                            bodyFont: { size: 15, weight: 'bold', family: "system-ui" },
+                            padding: 14,
+                            cornerRadius: 14,
+                            displayColors: false, // Hides the distracting color square
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.raw.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false, drawBorder: false }, 
+                            ticks: { color: isDark ? '#6b7280' : '#9ca3af', font: { size: 11, weight: '600' }, padding: 8 } 
+                        },
+                        y: { 
+                            grid: { display: false, drawBorder: false }, // Completely hides the background grid
+                            beginAtZero: true,
+                            ticks: { 
+                                color: isDark ? '#6b7280' : '#9ca3af', 
+                                font: { size: 11, weight: '600' },
+                                padding: 10,
+                                callback: val => Math.abs(val) >= 1000 ? (val/1000).toFixed(1)+'k' : val 
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         function updateIncomeChartForPeriod(startDate, endDate) {
             const canvas = document.getElementById('incomeDoughnutChart');
@@ -2030,11 +2959,11 @@
         // --- MODERN INLINE MONTH SELECTOR LOGIC ---
         const fullMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        // Set initial dates on load
-        const now = new Date();
-        const initMonthVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const initDisplayTxt = `${fullMonthNames[now.getMonth()]} ${now.getFullYear()}`;
-        
+               // Set initial dates on load
+        const currentDate = new Date();
+        const initMonthVal = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        const initDisplayTxt = `${fullMonthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
         // CRASH-PROOF CHECKS: Only update text if the HTML exists!
         const hFilter = document.getElementById('month-filter');
         const aFilter = document.getElementById('analytics-month-filter');
@@ -2045,6 +2974,8 @@
         if (aFilter) aFilter.value = initMonthVal;
         if (hDisplay) hDisplay.innerText = initDisplayTxt;
         if (aDisplay) aDisplay.innerText = initDisplayTxt;
+        if (document.getElementById('dynamic-cal-month')) document.getElementById('dynamic-cal-month').innerText = fullMonthNames[currentDate.getMonth()].substring(0,3).toUpperCase();
+
 
         function shiftMonth(offset, target) {
             const hiddenInput = document.getElementById(target === 'home' ? 'month-filter' : 'analytics-month-filter');
@@ -2068,7 +2999,7 @@
 
   
 
-            /* --- THEME CLASSES (Whole App Color) --- */
+            
       
 
             // Instantly refresh the data
@@ -2079,39 +3010,188 @@
             }
         }
 
-        // --- THEME SELECTOR LOGIC (Restored) ---
-        const themeCircles = document.querySelectorAll('.theme-circle');
-        
-        function applyTheme(themeName) {
-            // Remove any existing theme classes from the body
-            document.body.classList.remove('theme-blue', 'theme-green', 'theme-red', 'theme-yellow');
-            
-            // Add the new one 
-            if (themeName) {
-                document.body.classList.add(`theme-${themeName}`);
-            }
-            
-            // Update the visual active state on the circles
-            themeCircles.forEach(btn => {
-                if (btn.dataset.theme === themeName) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
+                // --- INFINITE THEME & DASHBOARD COLOR LOGIC ---
+        const themePicker = document.getElementById('theme-color-picker');
+        const dashPicker = document.getElementById('dash-color-picker');
 
-            // Save choice to localStorage
-            localStorage.setItem('app_theme', themeName);
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '33, 150, 243';
         }
 
-        // Attach click events to the circles
-        themeCircles.forEach(btn => {
-            btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+        function applyCustomDash(hexColor) {
+            const rgb = hexToRgb(hexColor);
+            document.body.style.setProperty('--balance-card-bg', hexColor);
+            
+            // SMART CONTRAST: Calculate dashboard brightness
+            const brightness = Math.round(((parseInt(rgb.split(',')[0]) * 299) + (parseInt(rgb.split(',')[1]) * 587) + (parseInt(rgb.split(',')[2]) * 114)) / 1000);
+            const textColor = (brightness > 135) ? '#111111' : '#ffffff';       // Flip main text
+            const mutedColor = (brightness > 135) ? '#4b5563' : '#a1a1a1';      // Flip sub-text
+            
+            document.body.style.setProperty('--dash-text-main', textColor);
+            document.body.style.setProperty('--dash-text-muted', mutedColor);
+            
+            localStorage.setItem('custom_dash_color', hexColor);
+        }
+              function applyCustomTheme(hexColor) {
+            const rgb = hexToRgb(hexColor);
+            document.body.style.setProperty('--primary-btn', hexColor);
+            document.body.style.setProperty('--primary-glow', `rgba(${rgb}, 0.4)`);
+            document.body.style.setProperty('--theme-bg-gradient', `linear-gradient(135deg, rgba(${rgb}, 0.12) 0%, #ffffff 100%)`);
+            
+            // SMART CONTRAST: Calculate button text brightness
+            const brightness = Math.round(((parseInt(rgb.split(',')[0]) * 299) + (parseInt(rgb.split(',')[1]) * 587) + (parseInt(rgb.split(',')[2]) * 114)) / 1000);
+            const textColor = (brightness > 135) ? '#111111' : '#ffffff';
+            document.body.style.setProperty('--btn-text-color', textColor);
+
+            // SMART CONTRAST: Protect Icons, Titles, and the FAB boundary!
+            let safeText = hexColor;
+            let fabBorder = '1px solid transparent'; 
+
+            if (!document.body.classList.contains('dark-mode') && brightness > 180) {
+                safeText = '#111111'; // Force text to black if theme is bright
+                if (brightness > 240) fabBorder = '1px solid #d1d5db'; // Add a subtle gray border if theme is almost pure white
+            } else if (document.body.classList.contains('dark-mode') && brightness < 75) {
+                safeText = '#ffffff'; // Force text to white if theme is too dark
+            }
+            
+            document.body.style.setProperty('--safe-accent-text', safeText);
+            document.body.style.setProperty('--fab-border', fabBorder); 
+
+            localStorage.setItem('custom_theme_color', hexColor);
+            if(window.lineChart) updateLineChart(1, document.querySelector('.filter-btn.active'));
+        }
+
+        
+              // 1. FIRST: Load saved custom colors when the app opens
+        const savedThemeColor = localStorage.getItem('custom_theme_color') || '#2196f3'; 
+        const savedDashColor = localStorage.getItem('custom_dash_color') || '#111111';   
+        
+        applyCustomTheme(savedThemeColor);
+        applyCustomDash(savedDashColor);
+
+        // 2. SECOND: Initialize Pickr using those loaded colors
+        const pickrConfig = {
+            theme: 'nano', 
+            swatches: ['#0A84FF', '#30D158', '#FF453A', '#FF9F0A', '#BF5AF2', '#FF375F', '#5E5CE6', '#111111'],
+            components: {
+                preview: true,
+                opacity: true,
+                hue: true,
+                interaction: {
+                    hex: true,
+                    input: true,
+                    save: true
+                }
+            }
+        };
+
+                // 3. Initialize Theme Picker
+        const themePickr = Pickr.create({
+            el: '#theme-pickr-container',
+            default: savedThemeColor,
+            ...pickrConfig
         });
 
-        // Check localStorage on load and apply the saved theme (Defaults to 'blue')
-        const savedTheme = localStorage.getItem('app_theme') || 'blue';
-        applyTheme(savedTheme);
+        // Add 'show' and 'hide' to trigger the background blur
+        themePickr.on('show', () => document.getElementById('overlay').style.display = 'block')
+                  .on('hide', () => {
+                      // SHIELD: Delay hiding the overlay by 150ms to absorb "ghost clicks"
+                      setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 150);
+                  })
+                  .on('save', (color) => {
+                      applyCustomTheme(color.toHEXA().toString());
+                      themePickr.hide();
+                  })
+                  .on('change', (color) => {
+                      applyCustomTheme(color.toHEXA().toString());
+                  });
+
+        // 4. Initialize Dashboard Picker
+        const dashPickr = Pickr.create({
+            el: '#dash-pickr-container',
+            default: savedDashColor,
+            ...pickrConfig
+        });
+
+        // Add 'show' and 'hide' to trigger the background blur
+        dashPickr.on('show', () => document.getElementById('overlay').style.display = 'block')
+                 .on('hide', () => {
+                     // SHIELD: Delay hiding the overlay by 150ms to absorb "ghost clicks"
+                     setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 150);
+                 })
+                 .on('save', (color) => {
+                     applyCustomDash(color.toHEXA().toString());
+                     dashPickr.hide();
+                 })
+                 .on('change', (color) => {
+                     applyCustomDash(color.toHEXA().toString());
+                 });
+
+
+        
+                // --- SWIPE GESTURE LOGIC ---
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe(e);
+        }, { passive: true });
+
+                function handleSwipe(event) {
+            // Block swipes if a modal, sidebar, or notification panel is open
+            if (document.getElementById('add-modal').classList.contains('open') || 
+                document.getElementById('editOverlay').classList.contains('active') ||
+                document.getElementById('filter-modal').style.display === 'flex' ||
+                document.getElementById('sub-modal').style.display === 'flex' ||
+                document.getElementById('notification-panel').classList.contains('open') || // 👈 NEW: Blocks swipe if alerts are open
+                document.getElementById('sidebar').classList.contains('open') ||            // 👈 NEW: Blocks swipe if menu is open
+                event.target.closest('.time-filters') || 
+                event.target.closest('.tx-list')) { 
+                return; 
+            }
+
+
+            const swipeDistX = touchEndX - touchStartX;
+            const swipeDistY = touchEndY - touchStartY;
+
+            // Ensure it's a deliberate horizontal swipe (more horizontal than vertical)
+            if (Math.abs(swipeDistX) > 35 && Math.abs(swipeDistX) > Math.abs(swipeDistY)) {
+                
+                const mainNavPages = ['page-home', 'page-graph', 'page-statement'];
+                const navItems = document.querySelectorAll('.bottom-nav .nav-item'); 
+                
+                let currentPageId = '';
+                document.querySelectorAll('.page').forEach(p => {
+                    if (p.style.display === 'block') currentPageId = p.id;
+                });
+
+                let currentIndex = mainNavPages.indexOf(currentPageId);
+                if (currentIndex === -1) return; // Ignore if on settings/calculator
+
+                if (swipeDistX < 0) {
+                    // Swiped Left (Go to Next Tab)
+                    if (currentIndex < mainNavPages.length - 1) {
+                        showPage(mainNavPages[currentIndex + 1], navItems[currentIndex + 1], 'right');
+                    }
+                } else {
+                    // Swiped Right (Go to Prev Tab)
+                    if (currentIndex > 0) {
+                        showPage(mainNavPages[currentIndex - 1], navItems[currentIndex - 1], 'left');
+                    }
+                }
+            }
+        }
+
 
         // --- CALCULATOR LOGIC ---
         let calcExpression = '';
@@ -2157,10 +3237,269 @@
             }
         }
 
-        // Initialize application on load
+        // --- PREVENT NATIVE LONG-PRESS MENUS GLOBALLY ---
+        window.oncontextmenu = function(event) {
+            // Allow copy/paste strictly inside input fields so users can still type!
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
+                return true; 
+            }
+            
+            // Kill the native menu everywhere else
+            event.preventDefault();
+            
+            // Instantly clear any accidental text highlights that manage to slip through
+            if (window.getSelection) {
+                window.getSelection().removeAllRanges();
+            }
+            
+            return false;
+        };
+        
+        
+// --- JUMP BACK TO TODAY ---
+function resetDateToToday() {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    
+    const trigger = document.getElementById('native-date-trigger');
+    if (trigger && trigger.value !== todayStr) {
+        trigger.value = todayStr;
+        syncSleekDate(todayStr); // This updates the UI and refreshes the list automatically
+    }
+}
+
+// --- SLEEK NATIVE DATE PICKER LOGIC ---
+function syncSleekDate(val) {
+    let d;
+    if (!val) {
+        // If cleared, default to today
+        d = new Date();
+        val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        document.getElementById('native-date-trigger').value = val;
+    } else {
+        // Parse safely to avoid timezone off-by-one errors
+        const parts = val.split('-');
+        d = new Date(parts[0], parts[1]-1, parts[2]);
+    }
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // Update the UI
+    document.getElementById('sleek-day-num').innerText = d.getDate();
+    document.getElementById('sleek-day-name').innerText = days[d.getDay()];
+    document.getElementById('sleek-month-name').innerText = months[d.getMonth()];
+
+    // Pass the YYYY-MM format to your app's existing month filter
+    const monthFilterVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const monthFilterEl = document.getElementById('month-filter');
+    if (monthFilterEl) {
+        monthFilterEl.value = monthFilterVal;
+    }
+    
+    // Refresh the charts and list
+    if (typeof render === 'function') render();
+}
+
+// Automatically set the button to Today's date when the app opens
+window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    
+    const trigger = document.getElementById('native-date-trigger');
+    if (trigger) {
+        trigger.value = todayStr;
+        syncSleekDate(todayStr);
+    }
+});
+
+// --- NOTIFICATION PANEL & BELL LOGIC ---
+const notiPanel = document.getElementById('notification-panel');
+const bellBtn = document.getElementById('bell-btn');
+
+function toggleNotifications() {
+    // 1. Trigger the swinging bell animation
+    if (bellBtn) {
+        bellBtn.classList.remove('ringing');
+        void bellBtn.offsetWidth; 
+        bellBtn.classList.add('ringing');
+    }
+
+    // 2. Open or close the panel
+    const isOpen = notiPanel.classList.contains('open');
+    if (isOpen) {
+        notiPanel.classList.remove('open');
+        overlay.style.display = 'none';
+        document.body.style.overflow = ''; // UNLOCK background scroll
+    } else {
+        sidebar.classList.remove('open'); 
+        notiPanel.classList.add('open');
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // LOCK background scroll
+    }
+}
+
+// 3. Make sure tapping the dark background closes EVERYTHING and unlocks scrolling
+overlay.onclick = () => { 
+    sidebar.classList.remove('open'); 
+    if (notiPanel) notiPanel.classList.remove('open');
+    overlay.style.display = 'none'; 
+    document.body.style.overflow = ''; // UNLOCK background scroll
+};
+
+// --- SLIDE TO DELETE NOTIFICATIONS LOGIC ---
+let notiStartX = 0;
+let currentNoti = null;
+let undoTimeout = null;
+let lastDeletedNoti = null;
+
+// Track when a user touches a notification
+document.addEventListener('touchstart', e => {
+    const noti = e.target.closest('.noti-item');
+    // Only track if the notification panel is actually open
+    if (noti && document.getElementById('notification-panel').classList.contains('open')) {
+        currentNoti = noti;
+        notiStartX = e.changedTouches[0].screenX;
+        currentNoti.style.transition = 'none'; // Snap instantly to finger
+    }
+}, { passive: true });
+
+// Move the notification with the finger
+document.addEventListener('touchmove', e => {
+    if (!currentNoti) return;
+    let currentX = e.changedTouches[0].screenX;
+    let diffX = currentX - notiStartX;
+    
+    // Only allow sliding to the right (out of the screen)
+    if (diffX > 0) { 
+        currentNoti.style.transform = `translateX(${diffX}px)`;
+        currentNoti.style.opacity = 1 - (diffX / 300); // Fade out as it slides
+    }
+}, { passive: true });
+
+// Determine whether to delete or snap back on release
+document.addEventListener('touchend', e => {
+    if (!currentNoti) return;
+    let currentX = e.changedTouches[0].screenX;
+    let diffX = currentX - notiStartX;
+    
+    currentNoti.style.transition = ''; // Restore CSS transitions
+
+    if (diffX > 100) {
+        // Trigger delete if swiped more than 100 pixels
+        deleteNotification(currentNoti);
+    } else {
+        // Snap back to original position
+        currentNoti.style.transform = '';
+        currentNoti.style.opacity = '';
+    }
+    currentNoti = null;
+}, { passive: true });
+
+function deleteNotification(element) {
+    // Save exactly where it was so we can put it back
+    lastDeletedNoti = {
+        element: element,
+        nextSibling: element.nextSibling,
+        parent: element.parentNode
+    };
+
+    // Animate out
+    element.classList.add('slide-out');
+    element.style.transform = ''; 
+    
+    // Wait for animation, then remove from DOM
+    setTimeout(() => {
+        if (element.parentNode) element.parentNode.removeChild(element);
+    }, 400);
+
+    showUndoToast();
+}
+
+function showUndoToast() {
+    const toast = document.getElementById('undo-toast');
+    toast.classList.add('show');
+    
+    clearTimeout(undoTimeout);
+    
+    // Hide the popup permanently after 2 seconds
+    undoTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        lastDeletedNoti = null; 
+    }, 2000);
+}
+
+function undoNotification() {
+    if (lastDeletedNoti) {
+        clearTimeout(undoTimeout);
+        document.getElementById('undo-toast').classList.remove('show');
+        
+        // Restore element visuals
+        lastDeletedNoti.element.classList.remove('slide-out');
+        lastDeletedNoti.element.style.transform = '';
+        lastDeletedNoti.element.style.opacity = '';
+
+        // Put it back in the exact same spot in the list
+        if (lastDeletedNoti.nextSibling) {
+            lastDeletedNoti.parent.insertBefore(lastDeletedNoti.element, lastDeletedNoti.nextSibling);
+        } else {
+            lastDeletedNoti.parent.appendChild(lastDeletedNoti.element);
+        }
+        
+        lastDeletedNoti = null;
+    }
+}
+
+// --- DYNAMIC NOTIFICATION MESSAGES ---
+const reminderMessages = [
+    "Don't forget to log your expenses today! 📝",
+    "Did you buy coffee today? Add it to your expenses! ☕",
+    "A penny saved is a penny earned. Track your spending! 💰",
+    "Small expenses add up! Keep your budget on track. 🚀",
+    "Financial freedom starts with tracking. Log your daily spends! 📈",
+    "Keep your wallet happy. Quick, log your recent transactions! 💳",
+    "Stay on top of your game! Any new income or expenses today? 🎯"
+];
+
+function sendSystemNotification() {
+    // 1. Check if the browser supports notifications
+    if (!("Notification" in window)) {
+        alert("This browser does not support desktop notifications");
+        return;
+    }
+
+    // 2. Pick a random message from our list
+    const randomIndex = Math.floor(Math.random() * reminderMessages.length);
+    const randomMessage = reminderMessages[randomIndex];
+
+    // 3. Send the notification if permission is already granted
+    if (Notification.permission === "granted") {
+        new Notification("Expense Pro", {
+            body: randomMessage,
+            icon: "icon.svg" 
+        });
+    } 
+    // 4. Otherwise, ask the user for permission
+    else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("Expense Pro", {
+                    body: "Awesome! We will use this to send you helpful reminders.",
+                    icon: "icon.svg"
+                });
+            }
+        });
+    }
+}
+
+               // Initialize application on load
         window.onload = () => {
             const dateInput = document.getElementById('tx-date');
             if(dateInput) dateInput.valueAsDate = new Date();
+            
+            // Force the app to officially 'open' the Home tab so swipe knows where to start
+            document.getElementById('page-home').style.display = 'block';
+            
             render();
         };
 
@@ -2178,4 +3517,3 @@
 
 </body>
 </html>
-
