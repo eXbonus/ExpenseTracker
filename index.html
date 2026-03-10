@@ -1,0 +1,3603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Expense Tracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+   <link rel="icon" href="icon-192.png" type="image/png">
+   <link rel="apple-touch-icon" href="icon-192.png">
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f8f9fe;
+            --card-bg: #ffffff;
+            --balance-card-bg: #111111;
+            --text-main: #111111;
+            --text-muted: #9ca3af;
+            --primary-btn: #111111;
+            --secondary-btn: #f1f1f1;
+            --income-color: #16a34a; 
+            --expense-color: #dc2626; 
+            --border: #f1f1f1;
+            --sidebar-bg: #ffffff;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --balance-card-bg: #000000;
+            --text-main: #ffffff;
+            --text-muted: #6b7280;
+            --primary-btn: #ffffff;
+            --secondary-btn: #333333;
+            --border: #333333;
+            --sidebar-bg: #1e1e1e;
+            --income-color: #10b981; 
+            --expense-color: #ef4444; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- ONBOARDING SCREEN STYLES --- */
+        #page-onboarding {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--card-bg); z-index: 9999;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
+        }
+        .onboarding-icon-bg {
+            width: 220px; height: 220px; 
+            background: var(--secondary-btn); 
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; margin-bottom: 40px;
+        }
+        
+        #page-onboarding h1 { font-size: 26px; margin: 0 0 15px; color: var(--text-main); line-height: 1.3; }
+        #page-onboarding p { font-size: 15px; color: var(--text-muted); margin: 0 0 40px; max-width: 320px; line-height: 1.5; }
+        
+        .btn-start {
+            background: var(--primary-btn); 
+            color: var(--bg-color); 
+            border: none; width: 200px;
+            padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); transition: transform 0.2s;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* Side Drawer Logic */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 998; backdrop-filter: blur(2px); }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--sidebar-bg); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 999; padding: 40px 20px; }
+        .sidebar.open { left: 0; }
+        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 500; margin-bottom: 5px; color: var(--text-main); }
+        .sidebar-item svg { width: 24px; height: 24px; fill: currentColor; }
+        .sidebar-item:hover { background: var(--secondary-btn); }
+
+        /* App Container */
+        .container { width: 100%; max-width: 450px; padding: 20px; padding-bottom: 120px; }
+        
+        /* Floating Header Elements */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 25px; }
+        .header-left { display: flex; gap: 10px; align-items: center; }
+        
+        .floating-pill {
+            background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .icon-btn.floating-pill { width: 44px; height: 44px; border-radius: 50%; padding: 0; cursor: pointer; }
+        .page-title-pill { height: 44px; border-radius: 22px; padding: 0 20px; }
+        .page-title-pill h2 { margin: 0; font-size: 16px; font-weight: 600; }
+        .month-picker.floating-pill { height: 44px; border-radius: 22px; padding: 0 15px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; max-width: 140px; }
+        .month-picker::-webkit-calendar-picker-indicator { cursor: pointer; filter: var(--icon-filter, none); }
+
+        /* Balance Card */
+        .balance-card { background: var(--balance-card-bg); color: white; padding: 30px 20px; border-radius: 28px; text-align: left; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .balance-card h4 { margin: 0; font-weight: 400; color: #a1a1a1; font-size: 14px; }
+        .balance-card h1 { margin: 10px 0 30px; font-size: 36px; }
+        .stats-grid { display: flex; gap: 20px; }
+        .stat-item { flex: 1; }
+        .stat-item h4 { font-size: 12px; margin-bottom: 5px; }
+        .stat-amount { font-weight: 600; font-size: 18px; }
+
+        /* Action Buttons */
+        .action-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-black { background: var(--primary-btn); color: var(--bg-color); }
+        .btn-gray { background: var(--secondary-btn); color: var(--text-main); }
+
+        /* Graph Containers */
+        .chart-container { background: var(--card-bg); padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .time-filters { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .time-filters::-webkit-scrollbar { display: none; }
+        .filter-btn { padding: 8px 14px; border-radius: 20px; border: none; background: var(--secondary-btn); color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .filter-btn.active { background: var(--primary-btn); color: var(--bg-color); }
+
+        /* Transaction List (Updated for Text Wrapping) */
+        .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
+        .section-title h3 { margin: 0; font-size: 18px; white-space: nowrap; }
+        .section-title span { color: var(--text-muted); font-size: 14px; cursor: pointer; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+        .section-title span:hover { text-decoration: underline; }
+
+        .tx-list { list-style: none; padding: 0; margin: 0; }
+                 .tx-item { 
+            background: var(--card-bg); 
+            padding: 16px; 
+            border-radius: 18px; 
+            margin-bottom: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid var(--border); 
+            gap: 10px; 
+            
+            /* ADD THESE TWO LINES */
+            max-height: 150px; 
+            overflow: hidden; 
+            
+            transition: 0.3s; 
+        }
+
+        
+                      /* --- SLIDE DELETE ANIMATION (THE FIX) --- */
+        .tx-item.slide-out {
+            transform: translateX(-120%) translateZ(0);
+            opacity: 0;
+            
+            /* Shrink everything to zero */
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+            border-width: 0 !important;
+            pointer-events: none;
+            
+            /* Stage 1: Slide left (0.2s) */
+            /* Stage 2: Wait 0.2s, then shrink the space (0.15s) */
+            transition: 
+                transform 0.2s ease-in, 
+                opacity 0.2s ease-in, 
+                max-height 0.15s ease-out 0.2s, 
+                padding 0.15s ease-out 0.2s, 
+                margin-bottom 0.15s ease-out 0.2s, 
+                border-width 0.15s ease-out 0.2s !important;
+        }
+
+
+
+        .tx-info { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
+        .tx-icon { width: 45px; height: 45px; background: var(--secondary-btn); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .tx-details { flex: 1; min-width: 0; }
+        .tx-details strong { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tx-details small { color: var(--text-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .tx-val { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap; }
+        .tx-attachment-icon { width: 20px; height: 20px; fill: currentColor; opacity: 0.6; flex-shrink: 0; }
+
+        /* Delete Button */
+        .delete-btn { background: none; border: none; color: var(--expense-color); padding: 5px; cursor: pointer; opacity: 0.5; transition: 0.2s; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .delete-btn:hover { opacity: 1; background: rgba(220, 38, 38, 0.1); }
+        .delete-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        body.hide-amounts .blur-target { filter: blur(8px); user-select: none; }
+
+        /* --- Settings UI (Premium SVG Toggles) --- */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); }
+        
+        .switch { position: relative; width: 60px; height: 32px; display: inline-block; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider { 
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+            background-color: #e2e8f0; 
+            transition: .4s; border-radius: 34px; 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 8px;
+        }
+        
+        .slider::before { 
+            position: absolute; content: ""; height: 26px; width: 26px; left: 3px; bottom: 3px; 
+            background-color: #ffffff; transition: .4s; border-radius: 50%; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1; 
+        }
+
+        .switch-icon { width: 15px; height: 15px; z-index: 2; transition: 0.4s; }
+
+        .slider .icon-left { stroke: #111111; } 
+        .slider .icon-right { stroke: #9ca3af; } 
+
+        input:checked + .slider { background-color: #111111; } 
+        input:checked + .slider::before { 
+            transform: translateX(28px); 
+            background-color: #374151; 
+        }
+        
+        input:checked + .slider .icon-left { stroke: #6b7280; } 
+        input:checked + .slider .icon-right { stroke: #ffffff; } 
+
+        /* Bottom Nav */
+  .bottom-nav { position: fixed; bottom: 25px; background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; padding: 5px 10px; z-index: 990; border: 1px solid var(--border); }
+        body.dark-mode .bottom-nav { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+              
+
+          /* Updated Bottom Nav Icons with "Pop" Animation */
+        .nav-item { 
+            background: none; border: none; cursor: pointer; padding: 8px 10px; 
+            color: var(--text-muted); 
+            /* We use a 'cubic-bezier' transition to give it a bouncy, spring-like feel */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; align-items: center; justify-content: center; 
+            transform: translateY(0) scale(1);
+        }
+        .nav-item svg { width: 26px; height: 26px; fill: currentColor; }
+        
+        .nav-item.active { 
+            color: var(--text-main); 
+            /* This moves the icon up by 8 pixels and makes it slightly larger */
+            transform: translateY(-8px) scale(1.15); 
+        }
+
+   
+            /* NEW: Plus icon area updated to blue background with white icon */
+        .nav-fab { 
+            background: #2196f3; /* 🔵 Sets the blue color */
+            color: #ffffff;      /* Keeps the plus icon white for contrast */
+            border: none; 
+            border-radius: 50%; 
+            width: 48px; 
+            height: 48px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer; 
+            box-shadow: 0 8px 15px rgba(33, 150, 243, 0.3); /* Softer blue shadow */
+            transition: transform 0.2s, background-color 0.2s; 
+        }
+
+         .nav-fab:active { transform: scale(0.95); }
+        .nav-fab svg { width: 24px; height: 24px; fill: currentColor; }
+
+                        /* Modern Inline Month Selector */
+        .month-selector-modern {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            height: 44px;
+            padding: 0 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .month-arrow {
+            background: none; border: none; color: var(--text-muted);
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s; font-size: 14px;
+        }
+        .month-arrow:hover, .month-arrow:active { background: var(--secondary-btn); color: var(--text-main); }
+        .month-text {
+            font-size: 14px; font-weight: 600; color: var(--text-main);
+            min-width: 100px; text-align: center; user-select: none;
+        }
+
+    /* Modals */
+            /* --- iOS Smooth Modal Animations --- */
+        @keyframes fadeBackdrop {
+            0% { opacity: 0; backdrop-filter: blur(0px); }
+            100% { opacity: 1; backdrop-filter: blur(4px); }
+        }
+        @keyframes iosModalPop {
+            0% { opacity: 0; transform: scale(0.85) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        #add-modal, #delete-modal, #reset-modal, #restore-modal, #image-modal, #sub-modal { 
+            animation: fadeBackdrop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        
+        .modal-content, #receipt-image-display { 
+            animation: iosModalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+        }
+
+        #add-modal, #delete-modal, #reset-modal, #restore-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        #add-modal.open, #delete-modal.open { display: flex; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; }
+        input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); }
+        .attachment-input-block { display: flex; align-items: center; gap: 12px; margin: 15px 0 10px; color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 10px; background: var(--bg-color); cursor: pointer; }
+        .attachment-icon-large { width: 30px; height: 30px; fill: currentColor; }
+        .attachment-text { color: var(--text-muted); font-size: 14px; flex: 1; }
+        #tx-file-input { display: none; }
+
+        /* Transaction Type Button Group */
+        .type-btn-group { display: flex; gap: 10px; margin: 10px 0; }
+        .type-btn { flex: 1; padding: 12px 5px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        
+        .type-btn[data-type="expense"].active { background-color: #fee2e2; color: #dc2626; border-color: #fee2e2; }
+        .type-btn[data-type="income"].active { background-color: #dcfce7; color: #16a34a; border-color: #dcfce7; }
+        .type-btn[data-type="transfer"].active { background: var(--primary-btn); color: var(--bg-color); border-color: var(--primary-btn); }
+
+        body.dark-mode .type-btn[data-type="expense"].active { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: transparent; }
+        body.dark-mode .type-btn[data-type="income"].active { background-color: rgba(16, 185, 129, 0.2); color: #10b981; border-color: transparent; }
+        
+        /* Selection Pills */
+        .selection-pill {
+            flex: 1;
+            background: var(--secondary-btn);
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            transition: 0.2s;
+        }
+        .selection-pill:active { transform: scale(0.98); background: var(--border); }
+        .selection-pill small { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .selection-pill strong { font-size: 14px; color: var(--text-main); margin-top: 2px; }
+
+        /* Sub-modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .sub-modal-content { max-height: 80vh; display: flex; flex-direction: column; }
+        .scroll-list { overflow-y: auto; flex: 1; padding-top: 10px; }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .category-item:hover { background: var(--secondary-btn); }
+        .category-icon-circle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+        }
+        .category-item span { font-weight: 500; font-size: 15px; color: var(--text-main); }
+
+            /* --- Search Bar Styles --- */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 0 5px 15px 5px;
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+        }
+        #tx-search {
+            width: 100%;
+            padding: 14px 14px 14px 45px; /* Extra left padding for the icon */
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: 0.2s;
+            margin: 0; 
+        }
+        #tx-search:focus {
+            border-color: var(--primary-btn);
+        }
+
+        /* --- DESKTOP / TABLET RESPONSIVE DESIGN --- */
+        @media (min-width: 768px) {
+            body { justify-content: flex-start; overflow-x: hidden; }
+            .sidebar { left: 0; box-shadow: 2px 0 15px rgba(0,0,0,0.05); }
+            body.dark-mode .sidebar { box-shadow: 2px 0 15px rgba(0,0,0,0.5); }
+            
+            .container { 
+                /* Prevent squishing by strictly calculating the remaining space */
+                max-width: calc(100vw - 280px); 
+                width: 100%;
+                margin-left: 280px; 
+                padding: 40px; 
+            }
+            
+            .bottom-nav { display: none !important; }
+            #menu-trigger { display: none; }
+            .action-row { max-width: 100%; }
+            .balance-card { max-width: 100%; }
+            #page-onboarding { left: 280px; width: calc(100% - 280px); }
+        }
+                 
+               /* --- THEME CLASSES (Whole App Color) --- */
+        body { min-height: 100vh; }
+
+
+        /* FIX INVISIBLE TEXT: Forces text to white so it is readable on the colored buttons */
+        body[class*="theme-"] .btn-black,
+        body[class*="theme-"] .btn-start,
+        body[class*="theme-"] .filter-btn.active,
+        body[class*="theme-"] .type-btn[data-type="transfer"].active {
+            color: #ffffff !important;
+        }
+
+        /* Yellow is a bright color, so it gets dark text for better readability */
+        body.theme-yellow .btn-black,
+        body.theme-yellow .btn-start,
+        body.theme-yellow .filter-btn.active,
+        body.theme-yellow .type-btn[data-type="transfer"].active {
+            color: #111111 !important;
+        }
+
+                /* Force the Bottom Nav and Plus Button to use the new Theme Colors */
+        .nav-fab {
+            background: var(--primary-btn) !important;
+            border: var(--fab-border, 1px solid transparent) !important;
+        }
+
+        body.theme-yellow .nav-fab { 
+            color: #111111 !important; 
+        }
+        .nav-item.active {
+            color: var(--primary-btn) !important;
+        }
+        /* --- Colorize Header Elements with Theme Color --- */
+        
+        /* 1. Hamburger menu and Back buttons */
+        body[class*="theme-"] .icon-btn.floating-pill {
+            color: var(--primary-btn);
+        }
+        
+        /* 2. Page titles (Home, Settings, etc.) */
+        body[class*="theme-"] .page-title-pill h2 {
+            color: var(--primary-btn);
+        }
+        
+        /* 3. Month selector text and arrows */
+        body[class*="theme-"] .month-text,
+        body[class*="theme-"] .month-arrow {
+            color: var(--primary-btn);
+        }
+
+        /* Keep the arrow hover effect looking clean */
+        body[class*="theme-"] .month-arrow:hover,
+        body[class*="theme-"] .month-arrow:active {
+            color: var(--primary-btn);
+            opacity: 0.7;
+        }
+           /* --- CALCULATOR STYLES --- */
+        .calc-container {
+            background: var(--card-bg); border-radius: 28px; padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-top: 10px;
+        }
+        body.dark-mode .calc-container { box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        
+        .calc-display {
+            background: var(--bg-color); border-radius: 16px; padding: 20px;
+            font-size: 36px; text-align: right; margin-bottom: 20px; color: var(--text-main);
+            word-wrap: break-word; min-height: 85px; display: flex; align-items: flex-end; justify-content: flex-end;
+        }
+        
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        
+        .calc-btn {
+            background: var(--secondary-btn); color: var(--text-main); border: none;
+            border-radius: 16px; font-size: 22px; padding: 18px 0; cursor: pointer;
+            transition: 0.2s; font-weight: 500;
+        }
+        .calc-btn:active { transform: scale(0.92); }
+        
+        .calc-op { color: var(--primary-btn); font-weight: 600; font-size: 24px; }
+        .calc-zero { grid-column: span 2; }
+        .calc-equals { background: var(--primary-btn); color: var(--bg-color); font-weight: 600; }
+        
+        body[class*="theme-"] .calc-op { color: var(--primary-btn); }
+        body[class*="theme-"] .calc-equals { background: var(--primary-btn); color: #ffffff !important; }
+        body.theme-yellow .calc-equals { color: #111111 !important; }
+
+/* Stop the phone's default text highlighting and copy/paste menu */
+.tx-item, .tx-item * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* The Dimmed Backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+}
+
+/* The Pop-up Card (Starts slightly shrunk and invisible) */
+.edit-card {
+    background: #1c1c1e;
+    width: 90%;
+    max-width: 350px;
+    border-radius: 20px;
+    padding: 20px;
+    transform: scale(0.9); 
+    opacity: 0;
+    /* This cubic-bezier creates the native iOS "spring" bounce */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* When the menu is triggered */
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-overlay.active .edit-card {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* iOS-style Inputs */
+.edit-card input, .edit-card select {
+    width: 100%;
+    background: #2c2c2e;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+/* --- NATIVE PAGE TRANSITION ANIMATIONS --- */
+.container {
+    position: relative;
+    overflow-x: hidden; /* Stops horizontal scrollbars from appearing during a swipe */
+}
+
+.page {
+    width: 100%;
+    background-color: var(--bg-color); /* CRITICAL: Prevents seeing through the page */
+    animation-fill-mode: both;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Hardware GPU Acceleration */
+}
+
+/* The page you are leaving stays still in the background and fades slightly */
+.page.outgoing-left, 
+.page.outgoing-right {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: calc(100% - 40px); /* Matches your container padding perfectly */
+    z-index: 1;
+}
+
+/* The page you are entering slides over the top */
+.page.slide-in-right, 
+.page.slide-in-left {
+    position: relative;
+    z-index: 5;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.05); /* Adds a subtle shadow behind the sliding page */
+}
+body.dark-mode .page.slide-in-right, body.dark-mode .page.slide-in-left {
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+
+/* The buttery smooth iOS timing curves */
+.slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.36, 0.66, 0.04, 1); }
+.slide-in-left { animation: slideInLeft 0.4s cubic-bezier(0.36, 0.66, 0.04, 1); }
+.outgoing-left { animation: slideOutLeft 0.4s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; }
+.outgoing-right { animation: slideOutRight 0.4s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; }
+
+/* The missing fade-in animation for sidebar pages */
+.fade-in { 
+    animation: pageFadeIn 0.3s cubic-bezier(0.36, 0.66, 0.04, 1) forwards; 
+    position: relative;
+    z-index: 5;
+}
+
+@keyframes pageFadeIn {
+    0% { opacity: 0; transform: scale(0.97); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+
+@keyframes slideInRight {
+    0% { transform: translate3d(100%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideInLeft {
+    0% { transform: translate3d(-100%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes slideOutLeft {
+    0% { transform: translate3d(0, 0, 0); opacity: 1; filter: brightness(1); }
+    100% { transform: translate3d(-25%, 0, 0); opacity: 0; filter: brightness(0.8); }
+}
+@keyframes slideOutRight {
+    0% { transform: translate3d(0, 0, 0); opacity: 1; filter: brightness(1); }
+    100% { transform: translate3d(25%, 0, 0); opacity: 0; filter: brightness(0.8); }
+}
+
+
+/* --- FULL SCREEN NATIVE FIX --- */
+
+/* 1. Remove the gap from the outer container */
+.container { 
+    padding: 0 !important; 
+}
+
+/* 2. Move the padding inside the page and make it full screen */
+.page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    padding-bottom: 120px;
+    background-color: var(--bg-color); 
+}
+
+/* 3. Fix the sliding position so it touches the edges of the screen */
+.page.outgoing-left, 
+.page.outgoing-right {
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* 4. Apply your beautiful themes directly to the sliding pages! */
+body.theme-blue .page { background-image: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%); }
+body.theme-green .page { background-image: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%); }
+body.theme-red .page { background-image: linear-gradient(135deg, #ffebee 0%, #ffffff 100%); }
+body.theme-yellow .page { background-image: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); }
+
+/* Ensure dark mode stays beautifully dark */
+body.dark-mode .page { background-image: none !important; background-color: var(--bg-color); }
+
+/* --- FAB GLOW OVERRIDE --- */
+:root { 
+    --primary-glow: rgba(17, 17, 17, 0.3); 
+}
+body.theme-blue { 
+    --primary-glow: rgba(33, 150, 243, 0.4) !important; 
+}
+body.theme-green { 
+    --primary-glow: rgba(76, 175, 80, 0.4) !important; 
+}
+body.theme-red { 
+    --primary-glow: rgba(244, 67, 54, 0.4) !important; 
+}
+body.theme-yellow { 
+    --primary-glow: rgba(255, 179, 0, 0.4) !important; 
+}
+
+/* The 'button.nav-fab' selector combined with '!important' guarantees this wins */
+button.nav-fab {
+    box-shadow: 0 8px 18px var(--primary-glow) !important;
+}
+
+/* --- THE ULTIMATE COPY/PASTE BLOCKER --- */
+/* Makes the text invisible to the phone's touch-selection engine */
+.tx-details strong, 
+.tx-details small, 
+.tx-val, 
+.tx-icon,
+.tx-info {
+    pointer-events: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* --- MODERN COLOR PICKER UI --- */
+.modern-color-picker {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(0,0,0,0.1);
+    border: 2px solid var(--card-bg);
+    outline: 2px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.modern-color-picker:active { transform: scale(0.9); }
+
+.color-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    pointer-events: none; 
+}
+
+/* Smart text contrast for buttons */
+.btn-black, .btn-start, .filter-btn.active, .type-btn[data-type="transfer"].active, .nav-fab, .calc-equals {
+    color: var(--btn-text-color, #ffffff) !important;
+}
+
+/* Apply the dynamic background gradient */
+.page { background-image: var(--theme-bg-gradient, none) !important; }
+body.dark-mode .page { background-image: none !important; }
+
+/* Force UI elements to obey the new custom color */
+.icon-btn.floating-pill, .page-title-pill h2, .month-text, .month-arrow, .calc-op {
+    color: var(--primary-btn) !important;
+}
+.calc-equals { background: var(--primary-btn) !important; }
+
+/* --- PREMIUM COLOR SWATCHES --- */
+.color-swatch {
+    width: 42px; 
+    height: 42px; 
+    border-radius: 50%; 
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid var(--card-bg);
+    outline: 2px solid transparent;
+}
+.color-swatch:active { transform: scale(0.85); }
+#custom-color-modal.active { opacity: 1; visibility: visible; }
+
+/* --- PREMIUM ROUNDED PICKR UI --- */
+
+/* 1. Force the preview buttons to be perfect circles */
+.pcr-button {
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    border: 2px solid var(--card-bg) !important;
+    outline: 2px solid var(--border) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    overflow: hidden !important; 
+}
+.pcr-button::after, .pcr-button::before {
+    border-radius: 50% !important;
+}
+
+/* 2. Center the modal on the screen and round the edges */
+.pcr-app {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    border-radius: 28px !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5) !important;
+    padding: 15px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg) !important; 
+    width: 280px !important; /* Keeps it a nice consistent size */
+}
+
+/* 3. Force the little preset swatches into PERFECT circles */
+.pcr-app .pcr-swatches > button,
+.pcr-app .pcr-swatches > button::before,
+.pcr-app .pcr-swatches > button::after {
+    border-radius: 50% !important;
+    width: 24px !important;  /* By forcing identical width/height... */
+    height: 24px !important; /* ...50% radius makes a perfect circle! */
+}
+
+/* 4. Round the big gradient palette box */
+.pcr-color-palette {
+    border-radius: 16px !important;
+}
+
+/* 5. Restructure the bottom row (Stack Input and Save Button) */
+.pcr-interaction {
+    flex-wrap: wrap !important; /* This allows the buttons to stack on new lines */
+}
+
+/* Hide the annoying 'HEXA' toggle button to make it cleaner */
+.pcr-interaction .pcr-type {
+    display: none !important;
+}
+
+/* Round the text input and make it full width */
+.pcr-interaction input {
+    border-radius: 12px !important;
+    border: 1px solid var(--border) !important;
+    font-family: inherit !important;
+    color: var(--text-main) !important;
+    background: var(--bg-color) !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    text-align: center !important;
+    margin-top: 10px !important;
+}
+
+
+        
+/* Make the Save button big, full-width, and placed below the input */
+.pcr-interaction .pcr-save {
+    border-radius: 12px !important;
+    background: #0A84FF !important; /* Sleek iOS Blue */
+    font-weight: 600 !important;
+    color: white !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    margin-top: 10px !important;
+    margin-left: 0 !important;
+    padding: 12px !important; 
+}
+
+
+/* --- SMART CONTRAST FIXES --- */
+/* Forces Dashboard text to flip black/white based on JS calculation */
+.balance-card { color: var(--dash-text-main, #ffffff) !important; }
+.balance-card h4, .balance-card .stat-item h4 { color: var(--dash-text-muted, #a1a1a1) !important; }
+
+/* Forces Icons and Titles to flip if the chosen Theme Color is invisible */
+.icon-btn.floating-pill, 
+.page-title-pill h2, 
+.month-text, 
+.month-arrow, 
+.calc-op, 
+.nav-item.active {
+    color: var(--safe-accent-text, var(--primary-btn)) !important;
+}
+
+/* --- NATIVE CALENDAR TRIGGER --- */
+.calendar-trigger-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 6px 16px 6px 6px; /* Extra padding on right, tight on left for the icon */
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden; /* Keeps the invisible input contained */
+}
+
+.calendar-trigger-btn span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    user-select: none;
+}
+
+/* The Invisible Native Picker */
+.calendar-trigger-btn input[type="month"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* --- SLEEK NATIVE DATE PICKER --- */
+.sleek-date-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #1c1c1e; /* Matches the dark image */
+    border-radius: 40px;
+    padding: 6px 16px 6px 6px;
+    gap: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.05);
+    cursor: pointer;
+    overflow: hidden;
+    height: 50px;
+}
+
+body:not(.dark-mode) .sleek-date-picker {
+    background: var(--card-bg);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+}
+
+.sleek-date-circle {
+    width: 38px;
+    height: 38px;
+    background: #111111;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 500;
+    color: #e5e5ea;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+}
+
+body:not(.dark-mode) .sleek-date-circle {
+    background: var(--bg-color);
+    color: var(--text-main);
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.05), inset 0 1px 2px #ffffff;
+    border: 1px solid var(--border);
+}
+
+.sleek-date-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.sleek-day-name {
+    font-size: 13px;
+    color: #8e8e93;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.sleek-month-name {
+    font-size: 15px;
+    color: #ffffff;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+body:not(.dark-mode) .sleek-month-name { color: var(--text-main); }
+
+.sleek-chevron {
+    width: 18px;
+    height: 18px;
+    color: #8e8e93;
+    margin-left: 5px;
+}
+
+/* The Invisible Native Trigger */
+.sleek-date-picker input[type="date"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+/* Stretches the tap-target on Android/iOS to cover the whole button */
+.sleek-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* --- NOTIFICATION BELL ANIMATION --- */
+@keyframes swingRing {
+    0% { transform: rotate(0deg); }
+    15% { transform: rotate(25deg); }
+    30% { transform: rotate(-25deg); }
+    45% { transform: rotate(15deg); }
+    60% { transform: rotate(-15deg); }
+    75% { transform: rotate(5deg); }
+    85% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.ringing svg {
+    animation: swingRing 0.6s cubic-bezier(0.36, 0.66, 0.04, 1);
+    transform-origin: top center; /* Makes it swing from the top like a real bell */
+}
+
+/* --- NOTIFICATIONS SIDE PANEL --- */
+.notification-panel {
+    position: fixed;
+    top: 0;
+    right: -320px; /* Hidden off-screen to the right */
+    width: 320px;
+    max-width: 85vw;
+    height: 100%;
+    background: var(--sidebar-bg);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.05);
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark-mode .notification-panel { box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
+.notification-panel.open { right: 0; }
+
+.noti-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.noti-item {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--secondary-btn);
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary-btn);
+}
+
+.noti-item h4 { margin: 0 0 6px 0; font-size: 15px; color: var(--text-main); }
+.noti-item p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.noti-item small { display: block; margin-top: 10px; font-size: 11px; color: var(--text-muted); opacity: 0.8; font-weight: 600; text-transform: uppercase; }
+
+        /* --- NOTIFICATION SLIDE & UNDO TOAST --- */
+        .noti-item {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .noti-item.slide-out {
+            transform: translateX(120%) !important;
+            opacity: 0 !important;
+            margin-bottom: -80px; /* Collapses the gap gracefully */
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            border-left-width: 0 !important;
+            pointer-events: none;
+            transition: transform 0.25s ease-in, opacity 0.25s ease-in, margin-bottom 0.3s ease-in-out 0.1s, padding 0.3s ease-in-out 0.1s;
+        }
+
+        #undo-toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            visibility: hidden;
+            background: white;
+            color: var(--bg-color);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.4s cubic-bezier(0.36, 0.66, 0.04, 1);
+        }
+
+        #undo-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .undo-btn {
+            background: none;
+            border: none;
+            color: #0081ff; /* iOS Blue */
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 0;
+        }
+
+   </style>
+</head>
+<body>
+
+    <div id="page-onboarding">
+        <div class="onboarding-icon-bg">
+            <svg viewBox="0 0 64 64" style="width: 110px; height: 110px; fill: none; stroke: var(--primary-btn); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round;">
+                <rect x="18" y="10" width="28" height="20" rx="2" />
+                <circle cx="32" cy="20" r="4" />
+                <rect x="8" y="24" width="48" height="30" rx="6" fill="var(--card-bg)" />
+                <path d="M46 32 h10 v14 h-10 a7 7 0 0 1 0 -14 z" fill="var(--card-bg)" />
+                <circle cx="51" cy="39" r="2.5" fill="var(--primary-btn)" stroke="none" />
+            </svg>
+        </div>
+        <h1>Save your money with<br>Expense Tracker</h1>
+        <p>Save money! The more your money works for you, the less you have to work for money.</p>
+        <button class="btn-start" onclick="startApp()">Let's Start</button>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+    
+    <div id="sidebar" class="sidebar">
+        <div style="margin-bottom: 30px; display: flex;">
+            <div class="page-title-pill floating-pill">
+                <h2>Menu</h2>
+            </div>
+        </div>
+        <div class="sidebar-item" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Home
+        </div>
+                
+        <div class="sidebar-item" onclick="showPage('page-calculator')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 16H7v-2h6v2zm4-4H7v-2h10v2zm0-4H7V9h10v2zm-4-4H7V5h6v2z"/></svg> Calculator
+        </div>
+        <div class="sidebar-item" onclick="showPage('page-settings')">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> Settings
+        </div>
+    </div>
+<div id="notification-panel" class="notification-panel">
+    <div class="noti-header">
+        <div class="page-title-pill floating-pill" style="margin: 0; padding: 0 15px;">
+            <h2>Alerts</h2>
+        </div>
+        <button class="icon-btn" onclick="toggleNotifications()" style="background: var(--secondary-btn); border-radius: 50%; width: 40px; height: 40px; border: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    
+        <div id="noti-container" style="flex: 1; overflow-y: auto; padding-right: 5px;">
+        <div class="noti-item">
+
+            <h4>Welcome to Expense Pro! 🎉</h4>
+            <p>Start tracking your expenses and take control of your finances today.</p>
+            <small>Just now</small>
+        </div>
+        <div class="noti-item" style="border-left-color: var(--income-color);">
+            <h4>Backup Recommended</h4>
+            <p>Don't forget to use the "Import Data" button if you switch devices to keep your records safe.</p>
+            <small>System Alert</small>
+        </div>
+    </div>
+</div>
+
+    <div class="container" id="main-app-container">
+        
+        <div id="page-home" class="page">
+          <div class="header">
+    <div class="header-left">
+              <button class="icon-btn floating-pill" id="menu-trigger">
+            <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round;">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="15" x2="15" y2="15"></line>
+       
+            </svg>
+        </button>
+
+        <div class="page-title-pill floating-pill">
+            <h2>Home</h2>
+        </div>
+    </div>
+
+    <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+        
+        <div class="sleek-date-picker">
+            <div class="sleek-date-circle" id="sleek-day-num">31</div>
+            <div class="sleek-date-text">
+                <span class="sleek-day-name" id="sleek-day-name">Tue</span>
+                <span class="sleek-month-name" id="sleek-month-name">December</span>
+            </div>
+            <svg class="sleek-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <input type="date" id="native-date-trigger" onchange="syncSleekDate(this.value)">
+            <input type="hidden" id="month-filter">
+        </div>
+
+        <button class="icon-btn floating-pill" id="bell-btn" onclick="toggleNotifications()">
+    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+</button>
+
+    </div>
+</div>
+
+
+            <div class="balance-card">
+                <h4>Total Balance</h4>
+                <h1 class="blur-target" id="total-balance">₹0.00</h1>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <h4>Income ↓</h4>
+                        <div class="stat-amount blur-target" id="total-income" style="color: var(--income-color)">₹0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Expenses ↑</h4>
+                        <div class="stat-amount blur-target" id="total-expense" style="color: var(--expense-color)">₹0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn btn-black" onclick="toggleModal(true)">Add Manual</button>
+                
+                <input type="file" id="file-upload" accept=".csv, .xlsx, .xls" style="display: none;" onchange="handleFileUpload(event)">
+                <button class="btn btn-black" onclick="document.getElementById('file-upload').click()">Import Data</button>
+            </div>
+
+                      <div style="display: flex; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Statistics</h2>
+                </div>
+            </div>
+
+            
+            <div class="chart-container" style="display: flex; justify-content: center; padding: 20px;">
+                <canvas id="homeBarChart" height="200"></canvas>
+            </div> 
+
+           
+        
+                                   <div class="section-title" style="padding: 0 5px;">
+    <div class="page-title-pill floating-pill">
+        <h2>Transactions</h2>
+    </div>
+
+    <div class="page-title-pill floating-pill" 
+         onclick="showPage('page-statement', document.querySelectorAll('.nav-item')[2])" 
+         style="cursor: pointer; padding: 0 15px;">
+        <h2 style="font-size: 14px;">See All</h2>
+    </div>
+</div>
+
+
+
+            <ul class="tx-list" id="tx-list"></ul>
+        </div>
+
+        <div id="page-graph" class="page" style="display: none;">
+            <div class="header" style="margin-bottom: 5px;">
+                <div class="header-left">
+                    
+                    <div class="page-title-pill floating-pill">
+                        <h2>Balance Trend</h2>
+                    </div>
+                </div>
+ 
+
+            </div>
+            
+            <p style="color: var(--text-muted); font-size: 18px; margin-top: 0; margin-bottom: 20px; padding-left: 5px;">Do I have more money than before?</p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding: 0 5px;">
+                <div>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase;">End Balance</span>
+                    <h1 class="blur-target" id="analytics-current-balance" style="margin: 5px 0 0; font-size: 28px;">₹0.00</h1>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color: var(--text-muted); font-size: 12px;">vs past period</span>
+                    <h3 class="blur-target" id="analytics-percent-change" style="margin: 5px 0 0; font-size: 18px;">0%</h3>
+                </div>
+            </div>
+
+            <div class="time-filters">
+                <button class="filter-btn active" onclick="updateLineChart(1, this)">1 M</button>
+                <button class="filter-btn" onclick="updateLineChart(2, this)">2 M</button>
+                <button class="filter-btn" onclick="updateLineChart(3, this)">3 M</button>
+                <button class="filter-btn" onclick="updateLineChart(12, this)">1 Yr</button>
+                <button class="filter-btn" onclick="updateLineChart(24, this)">2 Yrs</button>
+                <button class="filter-btn" onclick="updateLineChart(60, this)">5 Yrs</button>
+            </div>
+
+            <div class="chart-container" style="padding: 20px 10px 10px;">
+                <canvas id="analyticsLineChart" height="220"></canvas>
+            </div>
+                       <div style="display: flex; margin-top: 25px; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Income Breakdown</h2>
+                </div>
+            </div>
+
+            
+            <div class="chart-container" style="display: flex; justify-content: center; padding: 20px; margin-bottom: 30px;">
+                <canvas id="incomeDoughnutChart" height="200"></canvas>
+            </div>
+                                    <div style="display: flex; margin-bottom: 15px; padding: 0 5px;">
+                <div class="page-title-pill floating-pill">
+                    <h2>Spending Trends</h2>
+                </div>
+            </div>
+
+            
+            <div class="time-filters" id="spending-time-filters" style="margin-bottom: 15px;">
+                <button class="filter-btn" onclick="updateSpendingChart('daily', this)">Daily</button>
+                <button class="filter-btn" onclick="updateSpendingChart('weekly', this)">Weekly</button>
+                <button class="filter-btn active" onclick="updateSpendingChart('monthly', this)">Monthly</button>
+                <button class="filter-btn" onclick="updateSpendingChart('yearly', this)">Yearly</button>
+            </div>
+
+            <div class="chart-container" style="padding: 20px 10px 10px; margin-bottom: 30px;">
+                <canvas id="spendingBarChart" height="220"></canvas>
+            </div>
+
+        </div>
+                <div id="page-calculator" class="page" style="display: none;">
+            <div class="header">
+                <div class="header-left">
+                    <button class="icon-btn floating-pill" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <div class="page-title-pill floating-pill">
+                        <h2>Calculator</h2>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="calc-container">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-grid">
+                    <button class="calc-btn calc-op" onclick="calcInput('C')">C</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('DEL')">⌫</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('%')">%</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('-')">-</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+                    
+                    <button class="calc-btn calc-zero" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn calc-equals" onclick="calcInput('=')">=</button>
+                </div>
+            </div>
+        </div>
+ 
+        
+
+
+        <div id="page-settings" class="page" style="display: none;">
+            <div class="header">
+                <div class="header-left">
+                    <button class="icon-btn floating-pill" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <div class="page-title-pill floating-pill">
+                        <h2>Settings</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span>Dark mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-toggle">
+                    <span class="slider">
+                        <svg class="switch-icon icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="switch-icon icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </span>
+                </label>
+            </div>
+            
+            <div class="setting-row">
+                <span>Hide Amounts</span>
+                <label class="switch">
+                    <input type="checkbox" id="hide-toggle">
+                    <span class="slider">
+                        <svg class="switch-icon icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="switch-icon icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </span>
+                </label>
+            </div>
+                             
+                            <div class="setting-row">
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                    <span style="font-weight: 500;">Theme Color</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Custom primary accent</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="resetThemeColor()" style="background: var(--secondary-btn); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Default</button>
+                    <div id="theme-pickr-container"></div>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                    <span style="font-weight: 500;">Dashboard Color</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Top balance card</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button onclick="resetDashColor()" style="background: var(--secondary-btn); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Default</button>
+                    <div id="dash-pickr-container"></div>
+                </div>
+            </div>
+
+            
+
+                        <div class="setting-row" style="cursor: pointer;" onclick="window.open('https://exbonus.github.io/ExpenseTracker/privacy.txt', '_blank')">
+                <span>Privacy Policy</span>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            </div>
+
+
+          
+           <div class="setting-row" style="cursor: pointer;" onclick="showPage('page-logs')">
+                <span>Recently Deleted (Logs)</span>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--text-muted)"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+
+            <div class="setting-row" style="cursor: pointer; border-bottom: none;" onclick="openResetModal()">
+                <span style="color: var(--expense-color); font-weight: 600;">Reset All Data</span>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--expense-color)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" style="display:none;"/></svg>
+            </div>
+
+        </div>
+
+               <div id="page-statement" class="page" style="display: none;">
+            <div class="header">
+                <div class="header-left">
+                    <button class="icon-btn floating-pill" onclick="showPage('page-home', document.querySelectorAll('.nav-item')[0])">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <div class="page-title-pill floating-pill">
+                        <h2>All Transactions</h2>
+                    </div>
+                </div>
+            </div>
+            
+           <div style="display: flex; gap: 10px; margin: 0 5px 15px 5px;">
+                <div class="search-container" style="flex: 1; margin: 0;">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="tx-search" placeholder="Search by name, category, or amount..." oninput="render()">
+                </div>
+                
+                <button class="icon-btn" onclick="openFilterModal()" style="width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.02); flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                </button>
+            </div>
+            <ul class="tx-list" id="statement-tx-list"></ul>
+        </div>
+
+
+        <div id="page-logs" class="page" style="display: none;">
+            <div class="header">
+                <div class="header-left">
+                    <button class="icon-btn floating-pill" onclick="showPage('page-settings')">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <div class="page-title-pill floating-pill">
+                        <h2>Recently Deleted</h2>
+                    </div>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 20px;">Items here are permanently deleted after 30 days. Tap to restore.</p>
+            <ul class="tx-list" id="logs-tx-list"></ul>
+        </div>
+
+    </div> <div class="bottom-nav" id="main-bottom-nav">
+        <button class="nav-item active" onclick="showPage('page-home', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </button>
+        <button class="nav-item" onclick="showPage('page-graph', this)">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+        </button>
+        <div class="nav-fab-container">
+            <button class="nav-fab" onclick="toggleModal(true)">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </button>
+        </div>
+        <button class="nav-item" onclick="showPage('page-statement', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        </button>
+    </div>
+    <div id="add-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="margin-top: 0;">New Transaction</h3>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div class="selection-pill" onclick="openSubModal('account')">
+                    <small>Account</small>
+                    <strong id="selected-account">Cash</strong>
+                </div>
+                <div class="selection-pill" onclick="openSubModal('category')">
+                    <small>Category</small>
+                    <strong id="selected-category">OTHERS</strong>
+                </div>
+            </div>
+
+            <input type="text" id="tx-title" placeholder="Description (e.g. Rent)">
+            <input type="number" id="tx-amount" placeholder="Amount">
+            
+            <div class="type-btn-group">
+                <button type="button" class="type-btn active" data-type="expense">Expense</button>
+                <button type="button" class="type-btn" data-type="income">Income</button>
+                <button type="button" class="type-btn" data-type="transfer">Transfer</button>
+            </div>
+            <input type="hidden" id="tx-type" value="expense">
+            <input type="date" id="tx-date">
+            
+            <label class="attachment-input-block">
+                <svg class="attachment-icon-large" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                <span class="attachment-text" id="attachment-label">Add receipt/image</span>
+                <input type="file" id="tx-file-input" accept="image/*" onchange="updateFileName(this)">
+            </label>
+
+            <button class="btn btn-black" style="width:100%; margin-top: 15px;" onclick="saveTransaction()">Save</button>
+            <button class="btn btn-gray" style="width:100%; margin-top:10px;" onclick="toggleModal(false)">Cancel</button>
+        </div>
+    </div>
+
+        <div id="sub-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+
+        <div class="modal-content sub-modal-content">
+            <div class="header" style="padding: 10px 0;">
+                <h3 id="sub-modal-title" style="margin:0;">Select</h3>
+                                            <button onclick="closeSubModal()" style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: none; border-radius: 50%; background: var(--secondary-btn); color: var(--text-muted); cursor: pointer; transition: transform 0.2s;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+                   
+            </div>
+            <div id="sub-modal-list" class="scroll-list">
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <h3 style="margin-top: 0; color: var(--text-main);">Delete Transaction?</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">This action will move it to the Recycle Bin for 30 days.</p>
+            <button class="btn btn-black" style="width:100%; background: var(--expense-color); color: white;" onclick="executeDelete()">Yes, Delete</button>
+            <button class="btn btn-gray" style="width:100%; margin-top:10px;" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="restore-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <h3 style="margin-top: 0; color: var(--text-main);">Restore Transaction?</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">This will move the transaction back to your active list.</p>
+            <button class="btn btn-black" style="width:100%; background: var(--income-color); color: white;" onclick="executeRestore()">Yes, Restore</button>
+            <button class="btn btn-gray" style="width:100%; margin-top:10px;" onclick="closeRestoreModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="reset-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <h3 style="margin-top: 0; color: var(--expense-color);">Reset All Data?</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">This will permanently delete ALL transactions, images, logs, and settings. This cannot be undone.</p>
+            <button class="btn btn-black" style="width:100%; background: var(--expense-color); color: white;" onclick="executeReset()">Yes, Reset Everything</button>
+            <button class="btn btn-gray" style="width:100%; margin-top:10px;" onclick="closeResetModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="image-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1002; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(5px);">
+        <div style="width: 100%; max-width: 500px; text-align: right; padding: 20px;">
+                        <button class="icon-btn" onclick="closeImageModal()" style="color: var(--expense-color); background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+               </div>
+        <img id="receipt-image-display" src="" style="max-width: 90%; max-height: 75vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    </div>
+          
+
+    <div id="filter-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1005; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="max-width: 350px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">Filter Transactions</h3>
+            </div>
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Start Date</label>
+            <input type="date" id="filter-start-date" style="margin-top: 5px; margin-bottom: 15px;">
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">End Date</label>
+            <input type="date" id="filter-end-date" style="margin-top: 5px; margin-bottom: 15px;">
+            
+            <label style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Category</label>
+            <select id="filter-category" style="width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none;">
+                <option value="">All Categories</option>
+                </select>
+
+            <button class="btn btn-black" style="width:100%; margin-bottom: 10px;" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-gray" style="width:100%;" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+ <div id="editOverlay" class="modal-overlay" onclick="closeEditModal()">
+    <div class="edit-card" onclick="event.stopPropagation()">
+        <h3 style="margin-top:0; color:white; text-align:center;">Edit Transaction</h3>
+        
+        <input type="text" id="editName" placeholder="Name">
+        <input type="number" id="editAmount" placeholder="Amount">
+        
+        <select id="editType">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="transfer">Transfer</option>
+        </select>
+        
+        <select id="editAccount">
+            <option value="CASH">Cash</option>
+            <option value="ACCOUNT">Account</option>
+            <option value="CARD">Card</option>
+            <option value="WALLET">Wallet</option>
+        </select>
+
+        <select id="editCategory">
+            </select>
+        
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button onclick="saveEdit()" style="flex:1; background:#0A84FF; color:white; border:none; padding:12px; border-radius:10px; font-weight:600; font-size:16px;">Save</button>
+        </div>
+    </div>
+</div>
+
+    <div id="undo-toast">
+        
+        <button class="undo-btn" onclick="undoNotification()">Undo</button>
+    </div>
+
+
+    
+    <script>
+        // --- 1. APP INITIALIZATION & DATA LOADING ---
+        const onboardingScreen = document.getElementById('page-onboarding');
+        const mainContainer = document.getElementById('main-app-container');
+        const bottomNav = document.getElementById('main-bottom-nav');
+        
+        if (!localStorage.getItem('has_visited_pro')) {
+            onboardingScreen.style.display = 'flex';
+            mainContainer.style.display = 'none';
+            bottomNav.style.display = 'none';
+        } else {
+            onboardingScreen.style.display = 'none';
+        }
+
+        function startApp() {
+            localStorage.setItem('has_visited_pro', 'true');
+            onboardingScreen.style.display = 'none';
+            mainContainer.style.display = 'block';
+            bottomNav.style.display = 'flex';
+          updateHomeChart();
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const menuTrigger = document.getElementById('menu-trigger');
+        
+        let transactions = JSON.parse(localStorage.getItem('tx_pro')) || [];
+        let deletedTransactions = JSON.parse(localStorage.getItem('tx_pro_logs')) || [];
+
+        // --- 30-DAY AUTOMATIC PURGE ---
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const nowMs = Date.now();
+        deletedTransactions = deletedTransactions.filter(t => (nowMs - t.deletedAt) < THIRTY_DAYS_MS);
+        localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
+
+        // --- 2. MONTH FILTERS ---
+        const monthFilter = document.getElementById('month-filter');
+        const analyticsMonthFilter = document.getElementById('analytics-month-filter');
+        const currentMonthString = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
+        
+        if (monthFilter) {
+            monthFilter.value = currentMonthString;
+            monthFilter.addEventListener('change', render); 
+        }
+        if (analyticsMonthFilter) {
+            analyticsMonthFilter.value = currentMonthString;
+            analyticsMonthFilter.addEventListener('change', () => updateLineChart(1, document.querySelector('.filter-btn.active')));
+        }
+
+        // --- 3. NAVIGATION & SETTINGS ---
+        if(menuTrigger) menuTrigger.onclick = () => { sidebar.classList.add('open'); overlay.style.display = 'block'; };
+        
+
+                                function showPage(pageId, navElement = null, forceDirection = 'none') {
+            const pages = document.querySelectorAll('.page');
+            const mainNavPages = ['page-home', 'page-graph', 'page-statement'];
+            
+                       // 1. Find the current page we are leaving
+            let currentPageId = null;
+            pages.forEach(page => {
+                if (page.style.display === 'block') { // REMOVED the buggy "&& page.id !== pageId"
+                    currentPageId = page.id;
+                }
+            });
+
+            if (currentPageId === pageId) return; // Do nothing if tapping the same tab
+
+            let direction = forceDirection;
+
+            // Calculate direction if tapped from bottom nav
+            if (direction === 'none' && currentPageId && navElement) {
+                const curIdx = mainNavPages.indexOf(currentPageId);
+                const newIdx = mainNavPages.indexOf(pageId);
+                if (curIdx !== -1 && newIdx !== -1) {
+                    direction = newIdx > curIdx ? 'right' : 'left'; 
+                }
+            }
+
+            const oldPage = currentPageId ? document.getElementById(currentPageId) : null;
+            const newPage = document.getElementById(pageId);
+
+            // 2. Set up the Old Page (DO NOT HIDE IT YET!)
+            if (oldPage) {
+                oldPage.classList.remove('slide-in-right', 'slide-in-left', 'fade-in', 'outgoing-left', 'outgoing-right');
+                if (direction === 'right') {
+                    oldPage.classList.add('outgoing-left'); // Pushed left
+                } else if (direction === 'left') {
+                    oldPage.classList.add('outgoing-right'); // Pushed right
+                } else {
+                    oldPage.style.display = 'none'; // Fallback for sidebar
+                }
+            }
+
+            // 3. Set up the New Page (Slide it over the top)
+            newPage.style.display = 'block';
+            newPage.classList.remove('slide-in-right', 'slide-in-left', 'fade-in', 'outgoing-left', 'outgoing-right');
+            
+            requestAnimationFrame(() => {
+                if (direction === 'right') {
+                    newPage.classList.add('slide-in-right');
+                } else if (direction === 'left') {
+                    newPage.classList.add('slide-in-left');
+                } else {
+                    newPage.classList.add('fade-in');
+                }
+            });
+
+            sidebar.classList.remove('open');
+            overlay.style.display = 'none';
+
+            if(navElement) {
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+
+            // 4. THE MAGIC TRICK: Wait 400ms for the slide to finish BEFORE hiding the old page and redrawing the charts!
+            setTimeout(() => {
+                if (oldPage) {
+                    oldPage.style.display = 'none';
+                    oldPage.classList.remove('outgoing-left', 'outgoing-right');
+                }
+                
+                                        // Do the heavy rendering invisibly in the background
+            if(pageId === 'page-home') resetDateToToday();
+            
+            // This single render() now perfectly handles the Home list, Statement list, Logs list, AND all Charts!
+            render(); 
+        }, 400); 
+
+    }
+
+
+        const darkToggle = document.getElementById('dark-toggle');
+        const hideToggle = document.getElementById('hide-toggle');
+
+                darkToggle.onchange = () => {
+            document.body.classList.toggle('dark-mode', darkToggle.checked);
+            localStorage.setItem('dark', darkToggle.checked);
+            updateHomeChart();
+            
+            // Recalculate smart text contrast when switching modes!
+            applyCustomTheme(localStorage.getItem('custom_theme_color') || '#2196f3'); 
+        };
+        
+        hideToggle.onchange = () => {
+            document.body.classList.toggle('hide-amounts', hideToggle.checked);
+            localStorage.setItem('hide', hideToggle.checked);
+        };
+
+        if(localStorage.getItem('dark') === 'true') { darkToggle.checked = true; document.body.classList.add('dark-mode'); }
+        if(localStorage.getItem('hide') === 'true') { hideToggle.checked = true; document.body.classList.add('hide-amounts'); }
+
+        // --- 4. EXCEL & CSV IMPORT LOGIC ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                processImportedRows(rows);
+                event.target.value = ''; 
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processImportedRows(rows) {
+            if (rows.length < 2) return alert("File is empty.");
+            let addedCount = 0;
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i];
+                // Skip completely empty rows
+                if (!cols || cols.length === 0 || cols.every(c => c === undefined || c === null || c === '')) continue;
+
+                let rawDate = cols[0];
+                let title = cols[1] ? cols[1].toString() : 'Imported Transaction';
+                let amount = parseFloat(cols[2]);
+                let type = cols[3] ? cols[3].toString().toLowerCase() : 'expense';
+                let category = cols[4] ? cols[4].toString().toUpperCase() : 'OTHERS';
+                let account = cols[5] ? cols[5].toString().toUpperCase() : 'CASH';
+
+                if (isNaN(amount)) continue;
+
+                // Handle Excel Serial Dates vs Standard Text Dates (including DD/MM/YYYY)
+                let parsedDate;
+                if (typeof rawDate === 'number') {
+                    parsedDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+                } else if (typeof rawDate === 'string') {
+                    if (rawDate.includes('/')) {
+                        let parts = rawDate.split('/');
+                        if (parts[0].length === 2 && parts[2] && parts[2].length === 4) {
+                            parsedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); 
+                        } else {
+                            parsedDate = new Date(rawDate);
+                        }
+                    } else {
+                        parsedDate = new Date(rawDate);
+                    }
+                }
+                
+                if (!parsedDate || isNaN(parsedDate.getTime())) parsedDate = new Date(); 
+                
+                let formattedDate = new Date(parsedDate.getTime() - (parsedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                let finalAmount = type === 'expense' ? -Math.abs(amount) : Math.abs(amount);
+
+                transactions.push({
+                    id: Date.now() + i,
+                    title: title,
+                    amount: finalAmount,
+                    type: type,
+                    date: formattedDate,
+                    category: category,
+                    account: account,
+                    hasImage: false,
+                    imageData: null
+                });
+                addedCount++;
+            }
+            if (addedCount > 0) {
+                localStorage.setItem('tx_pro', JSON.stringify(transactions));
+                render();
+                alert(`Imported ${addedCount} items.`);
+            } else {
+                alert("No valid transactions found. Please check your Excel/CSV format.");
+            }
+        }
+
+        // --- 5. CORE CRUD LOGIC ---
+        function resetAddForm() {
+            document.getElementById('tx-title').value = '';
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('tx-date').valueAsDate = new Date();
+            document.getElementById('selected-account').innerText = 'ACCOUNT';
+            document.getElementById('selected-category').innerText = 'OTHERS';
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
+            document.getElementById('tx-type').value = 'expense';
+            const fileInput = document.getElementById('tx-file-input');
+            if(fileInput) fileInput.value = '';
+            const label = document.getElementById('attachment-label');
+            if(label) {
+                label.innerText = "Add receipt/image";
+                label.style.color = "var(--text-muted)";
+            }
+        }
+
+        function updateFileName(input) {
+            const label = document.getElementById('attachment-label');
+            if (input.files && input.files[0]) {
+                label.innerText = input.files[0].name;
+                label.style.color = "var(--text-main)";
+            } else {
+                label.innerText = "Add receipt/image";
+                label.style.color = "var(--text-muted)";
+            }
+        }
+
+        function toggleModal(show) { if(show) resetAddForm(); document.getElementById('add-modal').classList.toggle('open', show); }
+
+        function saveTransaction() {
+            const title = document.getElementById('tx-title').value;
+            const amt = parseFloat(document.getElementById('tx-amount').value);
+            const type = document.getElementById('tx-type').value;
+            const date = document.getElementById('tx-date').value;
+            const fileInput = document.getElementById('tx-file-input');
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if(!title || isNaN(amt) || !date) return alert("Fill required fields");
+
+            const newTx = {
+                title, amount: type === 'expense' ? -Math.abs(amt) : Math.abs(amt),
+                type, date, account: document.getElementById('selected-account').innerText,
+                category: document.getElementById('selected-category').innerText,
+                id: Date.now(), hasImage: !!file, imageData: null
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { newTx.imageData = e.target.result; finalizeSave(newTx); };
+                reader.readAsDataURL(file);
+            } else finalizeSave(newTx);
+        }
+
+                function finalizeSave(tx) {
+            try {
+                transactions.push(tx);
+                localStorage.setItem('tx_pro', JSON.stringify(transactions));
+                toggleModal(false); 
+                resetDateToToday();
+                // NEW UX TWEAK: Auto-switch the home page to the month of the newly added transaction!
+                const txMonth = tx.date.substring(0, 7); // Extracts "YYYY-MM" from "YYYY-MM-DD"
+                const monthFilter = document.getElementById('month-filter');
+                if (monthFilter) {
+                    monthFilter.value = txMonth;
+                }
+                
+                render();
+                showPage('page-home', document.querySelectorAll('.nav-item')[0]);
+            } catch(e) { 
+                alert("Storage full! Use smaller images."); 
+                transactions.pop(); 
+            }
+        }
+
+        let txToDelete = null;
+        function openDeleteModal(id) { txToDelete = id; document.getElementById('delete-modal').style.display = 'flex'; }
+        function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
+        function executeDelete() {
+    const idx = transactions.findIndex(t => String(t.id) === String(txToDelete));
+    if(idx > -1) {
+        closeDeleteModal();
+        
+        const shushSound = new Audio('Shwish.mp3'); 
+        shushSound.play().catch(e => console.log('Audio failed to play (browser auto-play policy):', e));
+
+        // Find the specific list item on BOTH the Home page and Statement page
+        const homeEl = document.getElementById(`tx-row-home-${txToDelete}`);
+        const stmtEl = document.getElementById(`tx-row-statement-${txToDelete}`);
+        
+        // Add the slide-out animation to whichever ones exist
+        if (homeEl) homeEl.classList.add('slide-out');
+        if (stmtEl) stmtEl.classList.add('slide-out');
+        
+        if (homeEl || stmtEl) {
+            setTimeout(() => {
+                const tx = transactions.splice(idx, 1)[0];
+                tx.deletedAt = Date.now();
+                deletedTransactions.push(tx);
+                localStorage.setItem('tx_pro', JSON.stringify(transactions));
+                localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
+                render();
+            }, 400); 
+        } else {
+            // Fallback if no elements were found
+            const tx = transactions.splice(idx, 1)[0];
+            tx.deletedAt = Date.now();
+            deletedTransactions.push(tx);
+            localStorage.setItem('tx_pro', JSON.stringify(transactions));
+            localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
+            render();
+        }
+    } else {
+        closeDeleteModal();
+    }
+}
+
+
+        let txToRestore = null;
+        function openRestoreModal(id) { txToRestore = id; document.getElementById('restore-modal').style.display = 'flex'; }
+        function closeRestoreModal() { document.getElementById('restore-modal').style.display = 'none'; }
+        function executeRestore() {
+            const idx = deletedTransactions.findIndex(t => String(t.id) === String(txToRestore));
+            if(idx > -1) {
+                const tx = deletedTransactions.splice(idx, 1)[0];
+                delete tx.deletedAt;
+                transactions.push(tx);
+                localStorage.setItem('tx_pro', JSON.stringify(transactions));
+                localStorage.setItem('tx_pro_logs', JSON.stringify(deletedTransactions));
+                render();
+            }
+            closeRestoreModal();
+        }
+
+        function openResetModal() { document.getElementById('reset-modal').style.display = 'flex'; }
+        function closeResetModal() { document.getElementById('reset-modal').style.display = 'none'; }
+        function executeReset() { localStorage.clear(); location.reload(); }
+
+        function openImageModal(id) {
+            const tx = transactions.find(t => String(t.id) === String(id)) || deletedTransactions.find(t => String(t.id) === String(id));
+            if (tx && tx.imageData) {
+                document.getElementById('receipt-image-display').src = tx.imageData;
+                document.getElementById('image-modal').style.display = 'flex';
+            }
+        }
+        function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
+        // --- HELPER FUNCTION: FORMAT RELATIVE DATE ---
+        function formatRelativeDate(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            
+            // Create a Date object from the YYYY-MM-DD string
+            const txDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const isSameDate = (d1, d2) => 
+                d1.getFullYear() === d2.getFullYear() && 
+                d1.getMonth() === d2.getMonth() && 
+                d1.getDate() === d2.getDate();
+
+            if (isSameDate(txDate, today)) return "Today";
+            if (isSameDate(txDate, yesterday)) return "Yesterday";
+
+            // If it's older than yesterday, format it as "Feb 3 2026"
+            return txDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).replace(',', '');
+        }
+// --- LONG PRESS TO EDIT LOGIC ---
+let pressTimer;
+let currentEditId = null;
+
+function startPress(id) {
+    pressTimer = setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate(40);
+        openEditModal(id);
+    }, 450);
+}
+
+function cancelPress() {
+    clearTimeout(pressTimer);
+}
+
+function openEditModal(id) {
+    currentEditId = id;
+    const t = transactions.find(item => String(item.id) === String(id));
+    if(!t) return;
+    
+    document.getElementById('editName').value = t.title;
+    document.getElementById('editAmount').value = Math.abs(t.amount);
+    
+    // Set the Account dropdown
+    document.getElementById('editAccount').value = (t.account || 'CASH').toUpperCase();
+
+    // Set the Type dropdown (fallback to checking the amount if type is missing)
+    const derivedType = t.type || (t.amount < 0 ? 'expense' : 'income');
+    document.getElementById('editType').value = derivedType;
+    
+    // Dynamically build the Category dropdown
+    const catSelect = document.getElementById('editCategory');
+    catSelect.innerHTML = ''; 
+    
+    categories.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.innerText = c.name;
+        catSelect.appendChild(opt);
+    });
+    
+    const matchingOption = Array.from(catSelect.options).find(opt => opt.value.toUpperCase() === (t.category || '').toUpperCase());
+    if (matchingOption) catSelect.value = matchingOption.value;
+    
+    document.getElementById('editOverlay').classList.add('active');
+}
+
+
+
+function closeEditModal() {
+    document.getElementById('editOverlay').classList.remove('active');
+    currentEditId = null;
+}
+
+function saveEdit() {
+    if(!currentEditId) return;
+    const t = transactions.find(item => String(item.id) === String(currentEditId));
+    if(!t) return;
+
+    // Grab all the new values from the modal
+    t.title = document.getElementById('editName').value;
+    const newAmt = parseFloat(document.getElementById('editAmount').value);
+    t.type = document.getElementById('editType').value;
+    t.account = document.getElementById('editAccount').value;
+    t.category = document.getElementById('editCategory').value.toUpperCase();
+
+    // Force the amount to be negative if 'Expense' is selected, positive otherwise
+    t.amount = t.type === 'expense' ? -Math.abs(newAmt) : Math.abs(newAmt);
+
+    // Save and refresh the UI
+    localStorage.setItem('tx_pro', JSON.stringify(transactions));
+    render();
+    closeEditModal();
+}
+
+function deleteTransaction() {
+    if(!currentEditId) return;
+    // Hook directly into your existing beautiful delete animation!
+    txToDelete = currentEditId;
+    closeEditModal();
+    executeDelete(); 
+}
+
+                // --- 6. RENDER & UI HELPERS ---
+        function createTxHTML(t, mode = 'home') {
+            const cat = categories.find(c => c.name.toUpperCase() === (t.category || 'OTHERS').toUpperCase()) || categories.find(c => c.name === 'Others');
+            const isExp = t.amount < 0 || t.type === 'expense';
+            const valColor = isExp ? 'var(--expense-color)' : 'var(--income-color)';
+            const sign = isExp ? '-' : '+';
+
+                       // Get the formatted date (Today, Yesterday, or Feb 3 2026)
+            const displayDate = formatRelativeDate(t.date);
+
+            // New layout: Just the amount (date is now handled by headers)
+            const valHtml = `
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div class="tx-val blur-target" style="color: ${valColor}">${sign}₹${Math.abs(t.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                </div>
+            `;
+
+
+            let rightSide = '';
+            let actionHtml = '';
+
+            // Handle UI logic for Home vs Statement vs Logs
+            if (mode === 'logs') {
+                const days = 30 - Math.floor((Date.now() - t.deletedAt) / 86400000);
+                rightSide = `
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div class="tx-val blur-target" style="color: ${valColor}">${sign}₹${Math.abs(t.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        <span style="font-size:11px;color:var(--expense-color);font-weight:600;">${days} days left</span>
+                    </div>
+                `;
+                actionHtml = `onclick="openRestoreModal('${t.id}')" style="cursor: pointer; opacity: 0.7;"`;
+            } else {
+                const imgBtn = t.hasImage ? `<span onclick="event.stopPropagation();openImageModal('${t.id}')" style="cursor:pointer;background:var(--secondary-btn);padding:4px;border-radius:6px;margin-right:5px;display:flex;align-items:center;justify-content:center;"><svg class="tx-attachment-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></span>` : '';
+                const delBtn = mode === 'statement' ? `<button class="delete-btn" onclick="event.stopPropagation();openDeleteModal('${t.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>` : '';
+                rightSide = `<div style="display:flex;align-items:center;gap:8px;">${imgBtn}${valHtml}${delBtn}</div>`;
+            }
+
+            return `
+               <li class="tx-item" id="tx-row-${mode}-${t.id}" ${actionHtml}
+
+                     ontouchstart="startPress('${t.id}')" 
+                     ontouchend="cancelPress()" 
+                     ontouchmove="cancelPress()" 
+                     onmousedown="startPress('${t.id}')" 
+                     onmouseup="cancelPress()"
+                     onmouseleave="cancelPress()"
+           oncontextmenu="event.preventDefault(); return false;">
+                   <div class="tx-info">
+                        <div class="tx-icon" style="background:${cat.color}20;color:${cat.color}">${cat.icon}</div>
+                        <div class="tx-details">
+                            <strong>${t.title}</strong>
+                            <small>${t.category || 'Other'} • ${t.account || 'Cash'}</small>
+                        </div>
+                    </div>
+                    ${rightSide}
+                </li>
+            `;
+        }
+           
+        // --- SEARCH & FILTER LOGIC ---
+        let currentSearchQuery = '';
+        let currentFilterStart = '';
+        let currentFilterEnd = '';
+        let currentFilterCategory = '';
+
+        // Listen for typing in the search bar
+        const searchInput = document.getElementById('search-input');
+        if(searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                currentSearchQuery = e.target.value.toLowerCase();
+                render(); // Instantly update list as you type!
+            });
+        }
+
+        function openFilterModal() {
+            // Populate category dropdown dynamically
+            const catSelect = document.getElementById('filter-category');
+            if (catSelect.options.length <= 1) {
+                categories.forEach(c => {
+                    if(!c.parent) { // Only list main categories for simplicity
+                        const opt = document.createElement('option');
+                        opt.value = c.name.toUpperCase();
+                        opt.innerText = c.name;
+                        catSelect.appendChild(opt);
+                    }
+                });
+            }
+            document.getElementById('filter-modal').style.display = 'flex';
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filter-modal').style.display = 'none';
+        }
+
+        function applyFilters() {
+            currentFilterStart = document.getElementById('filter-start-date').value;
+            currentFilterEnd = document.getElementById('filter-end-date').value;
+            currentFilterCategory = document.getElementById('filter-category').value;
+            closeFilterModal();
+            render();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
+            document.getElementById('filter-category').value = '';
+            currentFilterStart = '';
+            currentFilterEnd = '';
+            currentFilterCategory = '';
+            closeFilterModal();
+            render();
+        }
+        /* 👆 ---------------------- 👆 */
+        // --- TRANSACTION GROUPING HELPER ---
+        function renderGroupedTransactions(txArray, mode) {
+            if (!txArray || txArray.length === 0) {
+                return '<div style="text-align:center; padding: 30px 20px; color: var(--text-muted); font-size: 14px;">No transactions found</div>';
+            }
+            
+            let html = '';
+            let lastDate = null;
+
+            txArray.forEach(t => {
+                // If the date changes, insert a beautiful Date Header
+                if (t.date !== lastDate) {
+                    const headerDate = formatRelativeDate(t.date);
+                    html += `
+                        <div style="padding: 20px 5px 8px; font-size: 12.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">
+                            ${headerDate}
+                        </div>
+                    `;
+                    lastDate = t.date;
+                }
+                
+                // Insert the transaction itself
+                html += createTxHTML(t, mode);
+            });
+
+            return html;
+        }
+
+
+               function render() {
+            const selMonth = monthFilter ? monthFilter.value : '';
+            
+            // Apply Search, Dates, and Categories
+            const filtered = transactions.filter(t => {
+                // 1. Month Check (Bypass this if the user is using the specific Date Filter or Search)
+                let passMonth = true;
+                if (!currentFilterStart && !currentFilterEnd && !currentSearchQuery && selMonth) {
+                    passMonth = t.date.startsWith(selMonth);
+                }
+
+                // 2. Search Text Check
+                let passSearch = true;
+                if (currentSearchQuery) {
+                    passSearch = t.title.toLowerCase().includes(currentSearchQuery) || 
+                                 (t.category && t.category.toLowerCase().includes(currentSearchQuery));
+                }
+
+                // 3. Date Range Check
+                let passDateRange = true;
+                if (currentFilterStart || currentFilterEnd) {
+                    const tDate = new Date(t.date);
+                    if (currentFilterStart && tDate < new Date(currentFilterStart)) passDateRange = false;
+                    if (currentFilterEnd && tDate > new Date(currentFilterEnd)) passDateRange = false;
+                }
+
+                // 4. Category Check
+                let passCategory = true;
+                if (currentFilterCategory) {
+                    passCategory = (t.category || '').toUpperCase() === currentFilterCategory.toUpperCase() ||
+                                   (categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase())?.parent?.toUpperCase() === currentFilterCategory.toUpperCase());
+                }
+
+                return passMonth && passSearch && passDateRange && passCategory;
+            }).sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                return dateDiff !== 0 ? dateDiff : b.id - a.id;
+            });
+
+            let inc = 0, exp = 0;
+            filtered.forEach(t => {
+                const isExp = t.type === 'expense' || (t.amount < 0 && !t.type);
+                const isInc = t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer');
+                if (isExp) exp += Math.abs(t.amount);
+                else if (isInc) inc += Math.abs(t.amount);
+            });
+
+            const homeList = document.getElementById('tx-list');
+            const statementList = document.getElementById('statement-tx-list');
+            const logsList = document.getElementById('logs-tx-list');
+
+            // Apply the new grouping logic to all three lists
+            if (homeList) {
+                homeList.innerHTML = renderGroupedTransactions(filtered.slice(0, 5), 'home');
+            }
+            if (statementList) {
+                // Get the search term
+                const searchInput = document.getElementById('tx-search');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+                const allSorted = [...transactions].sort((a, b) => {
+                    const dateDiff = new Date(b.date) - new Date(a.date);
+                    return dateDiff !== 0 ? dateDiff : b.id - a.id;
+                });
+                
+                // Filter by Search Text AND Modal Filters
+                const searchFiltered = allSorted.filter(t => {
+                    let passSearch = true;
+                    if (searchTerm) {
+                        passSearch = t.title.toLowerCase().includes(searchTerm) || 
+                                     (t.category || '').toLowerCase().includes(searchTerm) || 
+                                     Math.abs(t.amount).toString().includes(searchTerm);
+                    }
+
+                    let passDateRange = true;
+                    if (typeof currentFilterStart !== 'undefined' && (currentFilterStart || currentFilterEnd)) {
+                        const tDate = new Date(t.date);
+                        if (currentFilterStart && tDate < new Date(currentFilterStart)) passDateRange = false;
+                        if (currentFilterEnd && tDate > new Date(currentFilterEnd)) passDateRange = false;
+                    }
+
+                    let passCategory = true;
+                    if (typeof currentFilterCategory !== 'undefined' && currentFilterCategory) {
+                        passCategory = (t.category || '').toUpperCase() === currentFilterCategory.toUpperCase() ||
+                                       (categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase())?.parent?.toUpperCase() === currentFilterCategory.toUpperCase());
+                    }
+
+                    return passSearch && passDateRange && passCategory;
+                });
+
+                statementList.innerHTML = renderGroupedTransactions(searchFiltered, 'statement');
+            }
+
+            document.getElementById('total-balance').innerText = `₹${(inc - exp).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+                        document.getElementById('total-income').innerText = `₹${inc.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-expense').innerText = `₹${exp.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            
+                    updateHomeChart(filtered);
+        if(document.getElementById('page-graph') && document.getElementById('page-graph').style.display === 'block') {
+            updateLineChart(1, document.querySelector('.filter-btn.active'));
+            updateSpendingChart(); 
+        }
+    }
+ 
+                // --- 7. CHARTS ---
+               let homeChart = null, lineChart = null, incomeChart = null, spendingChart = null;
+
+
+        function updateHomeChart(filtered = transactions) {
+            const canvas = document.getElementById('homeBarChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            const expenses = filtered.filter(t => t.type === 'expense' || (t.amount < 0 && !t.type));
+            const grouped = {};
+            expenses.forEach(t => { 
+                const catObj = categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase());
+                let groupName = t.category || 'Others';
+                
+                if (catObj && catObj.parent) groupName = catObj.parent;
+                else if (catObj) groupName = catObj.name;
+                
+                grouped[groupName] = (grouped[groupName] || 0) + Math.abs(t.amount); 
+            });
+
+            const sortedExpenses = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+            const labels = sortedExpenses.map(item => item[0]);
+            const data = sortedExpenses.map(item => item[1]);
+
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            let finalLabels = labels;
+            let finalData = data;
+            let bgColors = [];
+            let isPlaceholder = false;
+
+            if (data.length === 0) {
+                finalLabels = ['No Expenses Yet'];
+                finalData = [1]; 
+                bgColors = [isDark ? '#333333' : '#e2e8f0']; 
+                isPlaceholder = true;
+            } else {
+                bgColors = labels.map(label => {
+                    const cat = categories.find(c => c.name.toUpperCase() === label.toUpperCase());
+                    if (cat && cat.parent) {
+                        const parentCat = categories.find(c => c.name.toUpperCase() === cat.parent.toUpperCase());
+                        return parentCat ? parentCat.color : cat.color;
+                    }
+                    return cat ? cat.color : '#9e9e9e'; 
+                });
+            }
+
+            // --- THE FIX: Update instead of Destroy ---
+            if (homeChart) {
+                // Smoothly update existing data
+                homeChart.data.labels = finalLabels;
+                homeChart.data.datasets[0].data = finalData;
+                homeChart.data.datasets[0].backgroundColor = bgColors;
+                homeChart.data.datasets[0].borderWidth = isPlaceholder ? 0 : 2;
+                homeChart.data.datasets[0].borderColor = isDark ? '#1e1e1e' : '#ffffff';
+                homeChart.options.plugins.legend.display = !isPlaceholder;
+                homeChart.options.plugins.tooltip.enabled = !isPlaceholder;
+                homeChart.update(); // Triggers a smooth morph transition!
+            } else {
+                // Create it only the very first time the app loads
+                homeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { 
+                        labels: finalLabels, 
+                        datasets: [{ 
+                            data: finalData, 
+                            backgroundColor: bgColors, 
+                            borderWidth: isPlaceholder ? 0 : 2, 
+                            borderColor: isDark ? '#1e1e1e' : '#ffffff' 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '65%', 
+                        plugins: { 
+                            legend: { 
+                                display: !isPlaceholder, 
+                                position: 'right', 
+                                labels: { color: isDark ? '#a1a1a1' : '#717171', usePointStyle: true, boxWidth: 8, font: { size: 11 } } 
+                            },
+                            tooltip: {
+                                enabled: !isPlaceholder 
+                            }
+                        } 
+                    }
+                });
+            }
+        }
+                  function updateSpendingChart(viewType, btnElement = null) {
+            if (btnElement) {
+                const container = btnElement.closest('.time-filters');
+                container.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            } else {
+                const activeBtn = document.querySelector('#spending-time-filters .filter-btn.active');
+                if (activeBtn) viewType = activeBtn.innerText.toLowerCase();
+                else viewType = 'monthly';
+            }
+
+            const canvas = document.getElementById('spendingBarChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const isDark = document.body.classList.contains('dark-mode');
+            const expenseColor = getComputedStyle(document.body).getPropertyValue('--expense-color').trim() || '#ef4444';
+
+            const expenses = transactions.filter(t => t.type === 'expense' || (t.amount < 0 && !t.type));
+            
+            let labels = [];
+            let dataPoints = [];
+            
+            // Renamed to chartNow to prevent any future naming collisions!
+            const chartNow = new Date();
+
+            if (viewType === 'daily') {
+                for(let i = 6; i >= 0; i--) {
+                    let d = new Date(chartNow); d.setDate(chartNow.getDate() - i);
+                    let dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    let sum = expenses.filter(t => t.date === dateStr).reduce((a, b) => a + Math.abs(b.amount), 0);
+                    labels.push(d.toLocaleDateString('default', { weekday: 'short' }));
+                    dataPoints.push(sum);
+                }
+            } else if (viewType === 'weekly') {
+                for(let i = 3; i >= 0; i--) {
+                    let end = new Date(chartNow); end.setDate(chartNow.getDate() - (i*7));
+                    let start = new Date(end); start.setDate(start.getDate() - 6);
+                    start.setHours(0,0,0,0);
+                    end.setHours(23,59,59,999);
+                    
+                    let sum = expenses.filter(t => {
+                        let td = new Date(t.date);
+                        return td >= start && td <= end;
+                    }).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(`${start.getDate()} ${start.toLocaleDateString('default',{month:'short'})}`);
+                    dataPoints.push(sum);
+                }
+            } else if (viewType === 'yearly') {
+                for(let i = 3; i >= 0; i--) {
+                    let y = chartNow.getFullYear() - i;
+                    let sum = expenses.filter(t => t.date.startsWith(y.toString())).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(y.toString());
+                    dataPoints.push(sum);
+                }
+            } else { 
+                for(let i = 5; i >= 0; i--) {
+                    let d = new Date(chartNow.getFullYear(), chartNow.getMonth() - i, 1);
+                    let monthPrefix = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    let sum = expenses.filter(t => t.date.startsWith(monthPrefix)).reduce((a,b) => a + Math.abs(b.amount), 0);
+                    labels.push(d.toLocaleDateString('default', { month: 'short' }));
+                    dataPoints.push(sum);
+                }
+            }
+
+            if(spendingChart) spendingChart.destroy();
+
+            // 1. Create a modern fading vertical gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+            gradient.addColorStop(0, expenseColor);
+            gradient.addColorStop(1, isDark ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.15)');
+
+            spendingChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Spends',
+                        data: dataPoints,
+                        backgroundColor: gradient,
+                        hoverBackgroundColor: expenseColor, // Turns solid on tap/hover
+                        borderRadius: 20,     // Creates the pill shape
+                        borderSkipped: false, // Forces the bottom to be rounded too
+                        barThickness: 14      // Sleek, uniform bar width
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false // Makes tooltips easier to trigger on mobile
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#2c2c2e' : '#111111',
+                            titleFont: { size: 13, family: "system-ui", weight: 'normal', color: '#a1a1a1' },
+                            bodyFont: { size: 15, weight: 'bold', family: "system-ui" },
+                            padding: 14,
+                            cornerRadius: 14,
+                            displayColors: false, // Hides the distracting color square
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.raw.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false, drawBorder: false }, 
+                            ticks: { color: isDark ? '#6b7280' : '#9ca3af', font: { size: 11, weight: '600' }, padding: 8 } 
+                        },
+                        y: { 
+                            grid: { display: false, drawBorder: false }, // Completely hides the background grid
+                            beginAtZero: true,
+                            ticks: { 
+                                color: isDark ? '#6b7280' : '#9ca3af', 
+                                font: { size: 11, weight: '600' },
+                                padding: 10,
+                                callback: val => Math.abs(val) >= 1000 ? (val/1000).toFixed(1)+'k' : val 
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateIncomeChartForPeriod(startDate, endDate) {
+            const canvas = document.getElementById('incomeDoughnutChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Find all transactions within the selected graph time period
+            const periodTx = transactions.filter(t => {
+                const d = new Date(t.date);
+                return d >= startDate && d <= endDate;
+            });
+
+            // Filter ONLY for Income
+                        const incomes = periodTx.filter(t => t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer'));
+            const grouped = {};
+            incomes.forEach(t => { 
+                const catObj = categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase());
+                let groupName = t.category || 'Others';
+                
+                // If it's in a folder, give the money to the folder instead!
+                if (catObj && catObj.parent) groupName = catObj.parent;
+                else if (catObj) groupName = catObj.name;
+                
+                grouped[groupName] = (grouped[groupName] || 0) + Math.abs(t.amount); 
+            });
+
+            const sortedIncomes = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+            const labels = sortedIncomes.map(item => item[0]);
+            const data = sortedIncomes.map(item => item[1]);
+
+            if(incomeChart) incomeChart.destroy();
+
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            let finalLabels = labels;
+            let finalData = data;
+            let bgColors = [];
+            let isPlaceholder = false;
+
+            if (data.length === 0) {
+                finalLabels = ['No Income Yet'];
+                finalData = [1]; 
+                bgColors = [isDark ? '#333333' : '#e2e8f0']; 
+                isPlaceholder = true;
+                        } else {
+                bgColors = labels.map(label => {
+                    const cat = categories.find(c => c.name.toUpperCase() === label.toUpperCase());
+                    if (cat && cat.parent) {
+                        const parentCat = categories.find(c => c.name.toUpperCase() === cat.parent.toUpperCase());
+                        return parentCat ? parentCat.color : cat.color;
+                    }
+                    // Fallback to green if it's an uncategorized income
+                    return cat ? cat.color : 'var(--income-color)'; 
+                });
+            }
+
+
+            incomeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { 
+                    labels: finalLabels, 
+                    datasets: [{ 
+                        data: finalData, 
+                        backgroundColor: bgColors, 
+                        borderWidth: isPlaceholder ? 0 : 2, 
+                        borderColor: isDark ? '#1e1e1e' : '#ffffff' 
+                    }] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%', 
+                    plugins: { 
+                        legend: { display: !isPlaceholder, position: 'right', labels: { color: isDark ? '#a1a1a1' : '#717171', usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                        tooltip: { enabled: !isPlaceholder }
+                    } 
+                }
+            });
+        }
+    
+               
+
+        function updateLineChart(months, btnElement = null) {
+            if (btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            const activeBtn = document.querySelector('.filter-btn.active');
+            if (activeBtn) {
+                if (activeBtn.innerText === '1 M') months = 1;
+                else if (activeBtn.innerText === '2 M') months = 2;
+                else if (activeBtn.innerText === '3 M') months = 3;
+                else if (activeBtn.innerText === '1 Yr') months = 12;
+                else if (activeBtn.innerText === '2 Yrs') months = 24;
+                else if (activeBtn.innerText === '5 Yrs') months = 60;
+            }
+
+            const chartCanvas = document.getElementById('analyticsLineChart');
+            if(!chartCanvas) return;
+            const ctx = chartCanvas.getContext('2d');
+            const isDark = document.body.classList.contains('dark-mode');
+
+            const baseMonthVal = document.getElementById('analytics-month-filter') ? document.getElementById('analytics-month-filter').value : '';
+            const baseDate = baseMonthVal ? new Date(baseMonthVal + '-01T00:00:00') : new Date();
+            const startDate = new Date(baseDate.getFullYear(), baseDate.getMonth() - months + 1, 1);
+            const endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0, 23, 59, 59);
+
+            const isDaily = months <= 3;
+            let labels = [];
+            let balances = [];
+            let runningBalance = 0;
+
+            transactions.forEach(t => {
+                let d = new Date(t.date);
+                if (d < startDate) {
+                    if (t.type === 'expense' || (t.amount < 0 && !t.type)) runningBalance -= Math.abs(t.amount);
+                    else if (t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer')) runningBalance += Math.abs(t.amount);
+                }
+            });
+
+            const startingBalanceForPeriod = runningBalance;
+
+            if (isDaily) {
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    let dayTx = transactions.filter(t => new Date(t.date).toDateString() === d.toDateString());
+                    dayTx.forEach(t => {
+                        if (t.type === 'expense' || (t.amount < 0 && !t.type)) runningBalance -= Math.abs(t.amount);
+                        else if (t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer')) runningBalance += Math.abs(t.amount);
+                    });
+                    labels.push(d.toLocaleDateString('default', { month: 'short', day: 'numeric' }));
+                    balances.push(runningBalance);
+                }
+            } else {
+                for(let i = months - 1; i >= 0; i--) {
+                    let monthStart = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1);
+                    let monthEnd = new Date(baseDate.getFullYear(), baseDate.getMonth() - i + 1, 0, 23, 59, 59);
+
+                    let monthTx = transactions.filter(t => {
+                        let td = new Date(t.date);
+                        return td >= monthStart && td <= monthEnd;
+                    });
+
+                    monthTx.forEach(t => {
+                        if (t.type === 'expense' || (t.amount < 0 && !t.type)) runningBalance -= Math.abs(t.amount);
+                        else if (t.type === 'income' || (t.amount > 0 && !t.type && t.type !== 'transfer')) runningBalance += Math.abs(t.amount);
+                    });
+                    labels.push(monthStart.toLocaleDateString('default', { month: 'short', year: '2-digit' }));
+                    balances.push(runningBalance);
+                }
+            }
+
+            const finalBalance = balances.length > 0 ? balances[balances.length - 1] : 0;
+            const balanceElem = document.getElementById('analytics-current-balance');
+            if(balanceElem) balanceElem.innerText = `₹${finalBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            
+            let percentChange = 0;
+            if (startingBalanceForPeriod !== 0) {
+                percentChange = ((finalBalance - startingBalanceForPeriod) / Math.abs(startingBalanceForPeriod)) * 100;
+            } else if (finalBalance > 0) {
+                percentChange = 100;
+            }
+            
+            const pctElement = document.getElementById('analytics-percent-change');
+            if (pctElement) {
+                if (percentChange >= 0) {
+                    pctElement.innerText = `+${percentChange.toFixed(1)}%`;
+                    pctElement.style.color = 'var(--income-color)';
+                } else {
+                    pctElement.innerText = `${percentChange.toFixed(1)}%`;
+                    pctElement.style.color = 'var(--expense-color)';
+                }
+            }
+
+            if(lineChart) lineChart.destroy();
+
+            const blueColor = getComputedStyle(document.body).getPropertyValue('--primary-btn').trim() || '#2196f3';
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, 250);
+            bgGradient.addColorStop(0, isDark ? 'rgba(33, 150, 243, 0.4)' : 'rgba(33, 150, 243, 0.25)');
+            bgGradient.addColorStop(1, 'rgba(33, 150, 243, 0.0)');
+
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Balance', 
+                        data: balances,
+                        borderColor: blueColor, 
+                        backgroundColor: bgGradient,
+                        borderWidth: 2, 
+                        fill: true, 
+                        tension: 0.1, 
+                        pointRadius: 0, 
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    interaction: { mode: 'index', intersect: false }, 
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: isDark ? '#a1a1a1' : '#9ca3af', maxTicksLimit: 5 } },
+                        y: { 
+                            grid: { color: isDark ? '#333333' : '#e5e7eb', borderDash: [5, 5] }, 
+                            ticks: { 
+                                color: isDark ? '#a1a1a1' : '#9ca3af',
+                                callback: function(value) { return Math.abs(value) >= 1000 ? (value/1000).toFixed(1) + 'k' : value; }
+                            } 
+                        }
+                    }
+                }
+            });
+                            // Automatically update the Income Doughnut chart to match the Line Chart's timeframe
+            updateIncomeChartForPeriod(startDate, endDate);
+
+        }
+
+        const categories = [
+            { name: 'Food & Drinks', color: '#ff5722', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>' },
+            { name: 'Shopping', color: '#03a9f4', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>' },
+            { name: 'Housing', color: '#ff9800', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>' },
+            { name: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1-.9-2-2-2V7c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h2v3h2v-3h8v3h2v-3h2v-5zM8 7h8v3H8V7zm1 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>' },
+            { name: 'Vehicle', color: '#9c27b0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.07-.21.27-.35.49-.35h10.48c.22 0 .42.14.49.35L19 11H5z"/></svg>' },
+            { name: 'Investments', color: '#e91e63', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3.26 1.48 3.26 2.47 0 1.01-.71 1.98-2.88 1.98-2.09 0-2.95-.91-3.04-2.1H7.04c.1 1.99 1.55 3.21 3.46 3.69V21h3v-2.17c2.02-.42 3.51-1.63 3.51-3.59 0-2.43-1.9-3.41-4.71-4.34z"/></svg>' },
+            { name: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>' },
+            { name: 'Loans', color: '#1976d2', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 10h3v7H4zM10.5 10h3v7h-3zM2 19h20v3H2zM17 10h3v7h-3zM12 1L2 6v2h20V6z"/></svg>' },
+            { name: 'Life & Ent.', color: '#64dd17', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>' },
+            
+            /* --- COMMUNICATION FOLDER --- */
+            { name: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>' },
+            
+            /* --- SUB-CATEGORIES --- */
+            { name: 'General Comm.', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>' },
+            { name: 'Mobile Bill', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>' },
+            { name: 'Internet / Wi-Fi', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1 9l2 2c5-5 13-5 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>' },
+            { name: 'Software / Apps', parent: 'Communication', color: '#5c6bc0', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>' },
+            /* ----------------------------- */
+            
+            { name: 'Financial exp.', color: '#00bfa5', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.11-1.36-3.11-2.92v-.46h2.26v.29c0 .8.8 1.41 2.18 1.41 1.5 0 2.23-.55 2.23-1.3 0-.96-.92-1.36-2.52-1.87-1.84-.61-3.23-1.47-3.23-3.21 0-1.57 1.25-2.63 2.86-2.95V5h2.67v1.89c1.6.31 2.8 1.23 2.94 2.76h-2.22c-.1-.7-.7-1.31-1.95-1.31-1.25 0-1.97.55-1.97 1.24 0 .84.81 1.21 2.5 1.77 2 .65 3.32 1.5 3.32 3.3 0 1.62-1.29 2.72-2.9 3.04z"/></svg>' },
+            { name: 'Others', color: '#9e9e9e', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>' },
+            
+                        /* --- TRANSPORTATION FOLDER & SUB-CATEGORIES --- */
+            { name: 'General Transit', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1-.9-2-2-2V7c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h2v3h2v-3h8v3h2v-3h2v-5zM8 7h8v3H8V7zm1 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>' },
+            { name: 'Rapido', parent: 'Transportation', color: '#F9C935', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#F9C935" /><text x="11.5" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="9" font-style="italic" fill="#000000" text-anchor="middle">rapido</text></svg>' },
+            { name: 'Jugnoo', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM5 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5zm5.8-10l2.4-2.4.8.8c1.3 1.3 3 2.1 5.1 2.1V9c-1.5 0-2.7-.6-3.6-1.5l-1.9-1.9c-.5-.4-1-.7-1.6-.7s-1.1.2-1.4.6L8.5 8.4c-.3.4-.5.8-.5 1.3v5H10v-4.4l1.1-1.1L12.2 13v6h2v-7.5l-3.4-1zM19 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/></svg>' },
+            { name: 'Ola', parent: 'Transportation', color: '#cddc39', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#cddc39" /><text x="12" y="16.5" font-family="Arial, sans-serif" font-weight="900" font-size="13" fill="#000000" text-anchor="middle">ola</text></svg>' },
+            { name: 'Uber', parent: 'Transportation', color: '#111111', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#111111" /><path d="M7.5 7v6.5c0 2.48 2.02 4.5 4.5 4.5s4.5-2.02 4.5-4.5V7h-2.5v6.5c0 1.1-.9 2-2 2s-2-.9-2-2V7h-2.5z" fill="#ffffff" /></svg>' },
+            { name: 'Train', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.98-4-8-4zm0 2c4.42 0 6 .54 6 2v2H6V6c0-1.46 1.58-2 6-2zm5.5 11.5c0 .83-.67 1.5-1.5 1.5h-8c-.83 0-1.5-.67-1.5-1.5V12h11v3.5zM12 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>' },
+            { name: 'Bus', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>' },
+            { name: 'Taxi / Auto', parent: 'Transportation', color: '#607d8b', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H15V3H9v2H6.5c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.07-.21.27-.35.49-.35h10.48c.22 0 .42.14.49.35L19 11H5z"/></svg>' },
+            /* ---------------------------------------------- */
+            { name: 'Salary', parent: 'Income', color: '#4caf50', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>' },
+            { name: 'Govt. Subsidies', parent: 'Income', color: '#00bcd4', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>' },
+            { name: 'Checks, coupons', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22 10V6a2 2 0 00-2-2H4c-1.1 0-1.99.9-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2z"/></svg>' },
+            { name: 'Child Support', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 9V7c0-1.1-.9-2-2-2h-3v2H8V5H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2v9c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V9c1.1 0 2-.9 2-2z"/></svg>' },
+            { name: 'Dues & grants', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' },
+            { name: 'Gifts', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-4v-2h4zM9 4c.55 0 1 .45 1 1v2H6c0-.55.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>' },
+            { name: 'Interests, dividends', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.6 3l-1.4-1.4-15 15 1.4 1.4 15-15zM7.5 10c1.38 0 2.5-1.12 2.5-2.5S8.88 5 7.5 5 5 6.12 5 7.5 6.12 10 7.5 10zm0-3c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm9 8c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm0 3c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5z"/></svg>' },
+            { name: 'Lending, renting', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>' },
+            { name: 'Lottery, gambling', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H7c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2z"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="7.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>' },
+            { name: 'Refunds (tax, purchase)', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>' },
+            { name: 'Rental income', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3L2 12h3v8h14v-8h3L12 3zm-1 13.5v-1h-1c-.55 0-1-.45-1-1v-1.5c0-.55.45-1 1-1h2v-1h-2v-1.5h1v-1h2v1h1c.55 0 1 .45 1 1v1.5c0 .55-.45 1-1 1h-2v1h2v1.5h-1v1h-2z"/></svg>' },
+            { name: 'Sale', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>' },
+            { name: 'Wage, invoices', parent: 'Income', color: '#fbc02d', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>' },
+            /* --- FOOD & DRINKS FOLDER --- */
+            { name: 'Restaurant', parent: 'Food & Drinks', color: '#ff5722', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>' },
+            { name: 'Zomato', parent: 'Food & Drinks', color: '#E23744', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#E23744"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle" font-style="italic">z</text></svg>' },
+            { name: 'Swiggy', parent: 'Food & Drinks', color: '#FC8019', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="12" fill="#FC8019"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle">S</text></svg>' },
+            /* ----------------------------- */
+
+            /* --- SHOPPING FOLDER --- */
+            { name: 'Online Shopping', parent: 'Shopping', color: '#03a9f4', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>' },
+            { name: 'Grocery', parent: 'Shopping', color: '#4caf50', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.21 9l-4.38-6.56c-.19-.28-.51-.42-.83-.42-.32 0-.64.14-.83.43L6.79 9H2c-.55 0-1 .45-1 1 0 .09.01.18.04.27l2.54 9.27c.23.84 1 1.46 1.92 1.46h13c.92 0 1.69-.62 1.93-1.46l2.54-9.27L23 10c0-.55-.45-1-1-1h-4.79zM9 9l3-4.4L15 9H9zm3 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>' },
+            { name: 'Amazon', parent: 'Shopping', color: '#232F3E', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#232F3E"/><path d="M6 16c3.5 3 8.5 3 12 0-2 2-6 3-12 0z" fill="#FF9900"/><text x="12" y="14" font-family="Arial, sans-serif" font-weight="bold" font-size="14" fill="#FFFFFF" text-anchor="middle">a</text></svg>' },
+            { name: 'Flipkart', parent: 'Shopping', color: '#2874F0', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#2874F0"/><text x="12" y="17" font-family="Arial, sans-serif" font-weight="bold" font-size="16" font-style="italic" fill="#FFE11B" text-anchor="middle">f</text></svg>' },
+            { name: 'JioMart', parent: 'Shopping', color: '#008CCF', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="12" fill="#008CCF" /><text x="12" y="16.5" font-family="Arial, sans-serif" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">Jio</text></svg>' },
+            { name: 'bigBasket', parent: 'Shopping', color: '#84C225', icon: '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="6" fill="#84C225"/><text x="12" y="16" font-family="Arial, sans-serif" font-weight="bold" font-size="12" fill="#FFFFFF" text-anchor="middle">bb</text></svg>' }
+            /* ----------------------------- */
+
+   ];
+
+
+        const accounts = ['CASH', 'ACCOUNT', 'CARD', 'WALLET'];
+
+                function openSubModal(type) {
+            const subModal = document.getElementById('sub-modal');
+            const list = document.getElementById('sub-modal-list');
+            const title = document.getElementById('sub-modal-title');
+            list.innerHTML = '';
+            subModal.style.display = 'flex';
+
+            if (type === 'account') {
+                title.innerText = 'Select Account';
+                accounts.forEach(acc => {
+                    const div = document.createElement('div');
+                    div.className = 'category-item';
+                    div.innerHTML = `<span>${acc}</span>`;
+                    div.onclick = () => { document.getElementById('selected-account').innerText = acc; closeSubModal(); };
+                    list.appendChild(div);
+                });
+            } else {
+                // Open categories starting at the root level
+                renderCategoryList(null); 
+            }
+        }
+
+        // --- Smart Folder & Auto-Tag Logic ---
+        function renderCategoryList(parentName) {
+            const list = document.getElementById('sub-modal-list');
+            const title = document.getElementById('sub-modal-title');
+            list.innerHTML = '';
+
+            if (parentName) {
+                title.innerText = parentName;
+                // Add a Back Button at the top of the folder
+                const backDiv = document.createElement('div');
+                backDiv.className = 'category-item';
+                backDiv.style.background = 'var(--secondary-btn)';
+                backDiv.innerHTML = `<span style="display: flex; align-items: center; margin-right: 5px;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2196f3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></span> <span style="font-weight:600; color:var(--text-main);">Back to main list</span>`;
+                backDiv.onclick = () => renderCategoryList(null);
+                list.appendChild(backDiv);
+            } else {
+                title.innerText = 'Select Category';
+            }
+
+            // Only show main categories OR the specific sub-categories we clicked into
+            const displayCats = categories.filter(c => parentName ? c.parent === parentName : !c.parent);
+
+            displayCats.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-item';
+                
+                // Check if this category acts as a folder
+                const hasChildren = categories.some(c => c.parent === cat.name);
+                const arrowHtml = hasChildren ? `<span style="margin-left:auto; color:var(--text-muted); font-size:16px;">❯</span>` : '';
+                
+                div.innerHTML = `<div class="category-icon-circle" style="background:${cat.color}">${cat.icon}</div><span>${cat.name}</span>${arrowHtml}`;
+                
+                div.onclick = () => { 
+                    if (hasChildren) {
+                        // It's a folder, open it!
+                        renderCategoryList(cat.name); 
+                    } else {
+                        // It's a normal category, save it and close!
+                        document.getElementById('selected-category').innerText = cat.name.toUpperCase(); 
+                        
+                        // --- BULLETPROOF EXPENSE/INCOME SWITCH ---
+                        const typeBtns = document.querySelectorAll('.type-btn');
+                        const txTypeInput = document.getElementById('tx-type');
+                        
+                        // 1. Remove the active color from all buttons
+                        typeBtns.forEach(b => b.classList.remove('active')); 
+                        
+                        // 2. Force the correct button to light up green or red
+                        if (cat.name.toUpperCase() === 'INCOME' || (cat.parent && cat.parent.toUpperCase() === 'INCOME')) {
+                            document.querySelector('.type-btn[data-type="income"]').classList.add('active');
+                            txTypeInput.value = 'income';
+                        } else {
+                            document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
+                            txTypeInput.value = 'expense';
+                        }
+                        // ------------------------------------------
+                        
+                        closeSubModal(); 
+                    }
+                };
+                list.appendChild(div);
+            });
+        }
+
+        function closeSubModal() { document.getElementById('sub-modal').style.display = 'none'; }
+
+                             // --- TRANSACTION TYPE BUTTONS LOGIC ---
+        const typeBtns = document.querySelectorAll('.type-btn');
+        const txTypeInput = document.getElementById('tx-type');
+
+        typeBtns.forEach(btn => {
+            btn.onclick = () => {
+                // Remove active class from all buttons
+                typeBtns.forEach(b => b.classList.remove('active'));
+                // Add active class to the clicked button
+                btn.classList.add('active');
+                // Update the hidden input value
+                txTypeInput.value = btn.dataset.type;
+            };
+        });
+            
+                   
+            
+        // --- MODERN INLINE MONTH SELECTOR LOGIC ---
+        const fullMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+               // Set initial dates on load
+        const currentDate = new Date();
+        const initMonthVal = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        const initDisplayTxt = `${fullMonthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+        // CRASH-PROOF CHECKS: Only update text if the HTML exists!
+        const hFilter = document.getElementById('month-filter');
+        const aFilter = document.getElementById('analytics-month-filter');
+        const hDisplay = document.getElementById('home-month-display');
+        const aDisplay = document.getElementById('analytics-month-display');
+
+        if (hFilter) hFilter.value = initMonthVal;
+        if (aFilter) aFilter.value = initMonthVal;
+        if (hDisplay) hDisplay.innerText = initDisplayTxt;
+        if (aDisplay) aDisplay.innerText = initDisplayTxt;
+        if (document.getElementById('dynamic-cal-month')) document.getElementById('dynamic-cal-month').innerText = fullMonthNames[currentDate.getMonth()].substring(0,3).toUpperCase();
+
+
+        function shiftMonth(offset, target) {
+            const hiddenInput = document.getElementById(target === 'home' ? 'month-filter' : 'analytics-month-filter');
+            const displaySpan = document.getElementById(target === 'home' ? 'home-month-display' : 'analytics-month-display');
+
+            // Prevent crashes if the buttons were clicked but HTML is missing
+            if (!hiddenInput || !displaySpan) return; 
+
+            // Calculate the new date
+            let currentVal = hiddenInput.value || initMonthVal; 
+            let date = new Date(currentVal + "-01T00:00:00");
+            date.setMonth(date.getMonth() + offset);
+
+            // Format back to YYYY-MM
+            const newYear = date.getFullYear();
+            const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+            hiddenInput.value = `${newYear}-${newMonth}`;
+
+            // Update UI text
+            displaySpan.innerText = `${fullMonthNames[date.getMonth()]} ${newYear}`;
+
+  
+
+            
+      
+
+            // Instantly refresh the data
+            if (target === 'home') {
+                render();
+            } else {
+                updateLineChart(1, document.querySelector('.filter-btn.active'));
+            }
+        }
+
+                // --- INFINITE THEME & DASHBOARD COLOR LOGIC ---
+        const themePicker = document.getElementById('theme-color-picker');
+        const dashPicker = document.getElementById('dash-color-picker');
+
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '33, 150, 243';
+        }
+
+        function applyCustomDash(hexColor) {
+            const rgb = hexToRgb(hexColor);
+            document.body.style.setProperty('--balance-card-bg', hexColor);
+            
+            // SMART CONTRAST: Calculate dashboard brightness
+            const brightness = Math.round(((parseInt(rgb.split(',')[0]) * 299) + (parseInt(rgb.split(',')[1]) * 587) + (parseInt(rgb.split(',')[2]) * 114)) / 1000);
+            const textColor = (brightness > 135) ? '#111111' : '#ffffff';       // Flip main text
+            const mutedColor = (brightness > 135) ? '#4b5563' : '#a1a1a1';      // Flip sub-text
+            
+            document.body.style.setProperty('--dash-text-main', textColor);
+            document.body.style.setProperty('--dash-text-muted', mutedColor);
+            
+            localStorage.setItem('custom_dash_color', hexColor);
+        }
+              function applyCustomTheme(hexColor) {
+            const rgb = hexToRgb(hexColor);
+            document.body.style.setProperty('--primary-btn', hexColor);
+            document.body.style.setProperty('--primary-glow', `rgba(${rgb}, 0.4)`);
+            document.body.style.setProperty('--theme-bg-gradient', `linear-gradient(135deg, rgba(${rgb}, 0.12) 0%, #ffffff 100%)`);
+            
+            // SMART CONTRAST: Calculate button text brightness
+            const brightness = Math.round(((parseInt(rgb.split(',')[0]) * 299) + (parseInt(rgb.split(',')[1]) * 587) + (parseInt(rgb.split(',')[2]) * 114)) / 1000);
+            const textColor = (brightness > 135) ? '#111111' : '#ffffff';
+            document.body.style.setProperty('--btn-text-color', textColor);
+
+            // SMART CONTRAST: Protect Icons, Titles, and the FAB boundary!
+            let safeText = hexColor;
+            let fabBorder = '1px solid transparent'; 
+
+            if (!document.body.classList.contains('dark-mode') && brightness > 180) {
+                safeText = '#111111'; // Force text to black if theme is bright
+                if (brightness > 240) fabBorder = '1px solid #d1d5db'; // Add a subtle gray border if theme is almost pure white
+            } else if (document.body.classList.contains('dark-mode') && brightness < 75) {
+                safeText = '#ffffff'; // Force text to white if theme is too dark
+            }
+            
+            document.body.style.setProperty('--safe-accent-text', safeText);
+            document.body.style.setProperty('--fab-border', fabBorder); 
+
+            localStorage.setItem('custom_theme_color', hexColor);
+            if(window.lineChart) updateLineChart(1, document.querySelector('.filter-btn.active'));
+        }
+
+        
+                    // --- DEFAULT COLOR RESET FUNCTIONS ---
+        function resetThemeColor() {
+            // Remove inline styles to allow the app to fall back to native CSS
+            document.body.style.removeProperty('--primary-btn');
+            document.body.style.removeProperty('--primary-glow');
+            document.body.style.removeProperty('--theme-bg-gradient');
+            document.body.style.removeProperty('--btn-text-color');
+            document.body.style.removeProperty('--safe-accent-text');
+            document.body.style.removeProperty('--fab-border');
+            
+            localStorage.removeItem('custom_theme_color');
+            
+            // Revert the color dot to white in dark mode, black in light mode
+            const defaultColor = document.body.classList.contains('dark-mode') ? '#ffffff' : '#111111';
+            themePickr.setColor(defaultColor);
+            
+            if(window.lineChart) updateLineChart(1, document.querySelector('.filter-btn.active'));
+        }
+
+        function resetDashColor() {
+            document.body.style.removeProperty('--balance-card-bg');
+            document.body.style.removeProperty('--dash-text-main');
+            document.body.style.removeProperty('--dash-text-muted');
+            
+            localStorage.removeItem('custom_dash_color');
+            dashPickr.setColor('#111111');
+        }
+
+        // 1. FIRST: Load saved custom colors when the app opens
+        const savedThemeColor = localStorage.getItem('custom_theme_color'); 
+        const savedDashColor = localStorage.getItem('custom_dash_color');   
+        
+        // Only override the native Black/White if a custom color is explicitly saved
+        if (savedThemeColor) applyCustomTheme(savedThemeColor);
+        if (savedDashColor) applyCustomDash(savedDashColor);
+
+        const defaultThemeInit = document.body.classList.contains('dark-mode') ? '#ffffff' : '#111111';
+
+        // 2. SECOND: Initialize Pickr using those loaded colors
+        const pickrConfig = {
+            theme: 'nano', 
+            swatches: ['#0A84FF', '#30D158', '#FF453A', '#FF9F0A', '#BF5AF2', '#FF375F', '#5E5CE6', '#111111'],
+            components: {
+                preview: true,
+                opacity: true,
+                hue: true,
+                interaction: {
+                    hex: true,
+                    input: true,
+                    save: true
+                }
+            }
+        };
+
+                // 3. Initialize Theme Picker
+        const themePickr = Pickr.create({
+            el: '#theme-pickr-container',
+                        default: savedThemeColor || defaultThemeInit,
+
+            ...pickrConfig
+        });
+
+        // Add 'show' and 'hide' to trigger the background blur
+        themePickr.on('show', () => document.getElementById('overlay').style.display = 'block')
+                  .on('hide', () => {
+                      // SHIELD: Delay hiding the overlay by 150ms to absorb "ghost clicks"
+                      setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 150);
+                  })
+                  .on('save', (color) => {
+                      applyCustomTheme(color.toHEXA().toString());
+                      themePickr.hide();
+                  })
+                  .on('change', (color) => {
+                      applyCustomTheme(color.toHEXA().toString());
+                  });
+
+        // 4. Initialize Dashboard Picker
+        const dashPickr = Pickr.create({
+            el: '#dash-pickr-container',
+                        default: savedDashColor || '#111111',
+
+            ...pickrConfig
+        });
+
+        // Add 'show' and 'hide' to trigger the background blur
+        dashPickr.on('show', () => document.getElementById('overlay').style.display = 'block')
+                 .on('hide', () => {
+                     // SHIELD: Delay hiding the overlay by 150ms to absorb "ghost clicks"
+                     setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 150);
+                 })
+                 .on('save', (color) => {
+                     applyCustomDash(color.toHEXA().toString());
+                     dashPickr.hide();
+                 })
+                 .on('change', (color) => {
+                     applyCustomDash(color.toHEXA().toString());
+                 });
+
+
+        
+                // --- SWIPE GESTURE LOGIC ---
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe(e);
+        }, { passive: true });
+
+             function handleSwipe(event) {
+            // Block swipes if a modal, sidebar, or notification panel is open
+            if (document.getElementById('add-modal').classList.contains('open') || 
+                document.getElementById('editOverlay').classList.contains('active') ||
+                document.getElementById('filter-modal').style.display === 'flex' ||
+                document.getElementById('sub-modal').style.display === 'flex' ||
+                document.getElementById('notification-panel').classList.contains('open') || 
+                document.getElementById('sidebar').classList.contains('open') ||            
+                event.target.closest('.time-filters')) { 
+                // Notice we removed: || event.target.closest('.tx-list')
+                return; 
+            }
+
+            const swipeDistX = touchEndX - touchStartX;
+            const swipeDistY = touchEndY - touchStartY;
+
+            // Ensure it's a deliberate horizontal swipe (more horizontal than vertical)
+            if (Math.abs(swipeDistX) > 35 && Math.abs(swipeDistX) > Math.abs(swipeDistY)) {
+                
+                const mainNavPages = ['page-home', 'page-graph', 'page-statement'];
+                const navItems = document.querySelectorAll('.bottom-nav .nav-item'); 
+                
+                let currentPageId = '';
+                document.querySelectorAll('.page').forEach(p => {
+                    if (p.style.display === 'block') currentPageId = p.id;
+                });
+
+                let currentIndex = mainNavPages.indexOf(currentPageId);
+                if (currentIndex === -1) return; // Ignore if on settings/calculator
+
+                if (swipeDistX < 0) {
+                    // Swiped Left (Go to Next Tab)
+                    if (currentIndex < mainNavPages.length - 1) {
+                        showPage(mainNavPages[currentIndex + 1], navItems[currentIndex + 1], 'right');
+                    }
+                } else {
+                    // Swiped Right (Go to Prev Tab)
+                    if (currentIndex > 0) {
+                        showPage(mainNavPages[currentIndex - 1], navItems[currentIndex - 1], 'left');
+                    }
+                }
+            }
+        }
+
+
+        // --- CALCULATOR LOGIC ---
+        let calcExpression = '';
+        const calcDisplay = document.getElementById('calc-display');
+
+        function calcInput(val) {
+            if (!calcDisplay) return;
+            
+            if (val === 'C') {
+                calcExpression = '';
+                calcDisplay.innerText = '0';
+            } else if (val === 'DEL') {
+                calcExpression = calcExpression.slice(0, -1);
+                calcDisplay.innerText = calcExpression || '0';
+            } else if (val === '=') {
+                try {
+                    // Replace visual symbols with actual math operators
+                    let sanitized = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                    // Prevent crazy JS injection by strictly allowing only math characters
+                    if(/^[0-9+\-*/.%() ]+$/.test(sanitized)) {
+                        // Evaluate math
+                        let result = new Function('return ' + sanitized)();
+                        // Rounding to fix Javascript's floating point bugs (e.g. 0.1 + 0.2 = 0.300000004)
+                        result = Math.round(result * 100000000) / 100000000;
+                        calcExpression = String(result);
+                        calcDisplay.innerText = calcExpression;
+                    } else {
+                        calcDisplay.innerText = 'Error';
+                        calcExpression = '';
+                    }
+                } catch (e) {
+                    calcDisplay.innerText = 'Error';
+                    calcExpression = '';
+                }
+            } else {
+                // Add the character to the screen
+                let displayVal = val;
+                if (val === '*') displayVal = '×';
+                if (val === '/') displayVal = '÷';
+                
+                calcExpression += displayVal;
+                calcDisplay.innerText = calcExpression;
+            }
+        }
+
+        // --- PREVENT NATIVE LONG-PRESS MENUS GLOBALLY ---
+        window.oncontextmenu = function(event) {
+            // Allow copy/paste strictly inside input fields so users can still type!
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
+                return true; 
+            }
+            
+            // Kill the native menu everywhere else
+            event.preventDefault();
+            
+            // Instantly clear any accidental text highlights that manage to slip through
+            if (window.getSelection) {
+                window.getSelection().removeAllRanges();
+            }
+            
+            return false;
+        };
+        
+        
+// --- JUMP BACK TO TODAY ---
+function resetDateToToday() {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    
+    const trigger = document.getElementById('native-date-trigger');
+    if (trigger && trigger.value !== todayStr) {
+        trigger.value = todayStr;
+        syncSleekDate(todayStr); // This updates the UI and refreshes the list automatically
+    }
+}
+
+// --- SLEEK NATIVE DATE PICKER LOGIC ---
+function syncSleekDate(val) {
+    let d;
+    if (!val) {
+        // If cleared, default to today
+        d = new Date();
+        val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        document.getElementById('native-date-trigger').value = val;
+    } else {
+        // Parse safely to avoid timezone off-by-one errors
+        const parts = val.split('-');
+        d = new Date(parts[0], parts[1]-1, parts[2]);
+    }
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // Update the UI
+    document.getElementById('sleek-day-num').innerText = d.getDate();
+    document.getElementById('sleek-day-name').innerText = days[d.getDay()];
+    document.getElementById('sleek-month-name').innerText = months[d.getMonth()];
+
+    // Pass the YYYY-MM format to your app's existing month filter
+    const monthFilterVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const monthFilterEl = document.getElementById('month-filter');
+    if (monthFilterEl) {
+        monthFilterEl.value = monthFilterVal;
+    }
+    
+    // Refresh the charts and list
+    if (typeof render === 'function') render();
+}
+
+// Automatically set the button to Today's date when the app opens
+window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    
+    const trigger = document.getElementById('native-date-trigger');
+    if (trigger) {
+        trigger.value = todayStr;
+        syncSleekDate(todayStr);
+    }
+});
+
+// --- NOTIFICATION PANEL & BELL LOGIC ---
+const notiPanel = document.getElementById('notification-panel');
+const bellBtn = document.getElementById('bell-btn');
+
+function toggleNotifications() {
+    // 1. Trigger the swinging bell animation
+    if (bellBtn) {
+        bellBtn.classList.remove('ringing');
+        void bellBtn.offsetWidth; 
+        bellBtn.classList.add('ringing');
+    }
+
+    // 2. Open or close the panel
+    const isOpen = notiPanel.classList.contains('open');
+    if (isOpen) {
+        notiPanel.classList.remove('open');
+        overlay.style.display = 'none';
+        document.body.style.overflow = ''; // UNLOCK background scroll
+    } else {
+        sidebar.classList.remove('open'); 
+        notiPanel.classList.add('open');
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // LOCK background scroll
+    }
+}
+
+// 3. Make sure tapping the dark background closes EVERYTHING and unlocks scrolling
+overlay.onclick = () => { 
+    sidebar.classList.remove('open'); 
+    if (notiPanel) notiPanel.classList.remove('open');
+    overlay.style.display = 'none'; 
+    document.body.style.overflow = ''; // UNLOCK background scroll
+};
+
+// --- SLIDE TO DELETE NOTIFICATIONS LOGIC ---
+let notiStartX = 0;
+let currentNoti = null;
+let undoTimeout = null;
+let lastDeletedNoti = null;
+
+// Track when a user touches a notification
+document.addEventListener('touchstart', e => {
+    const noti = e.target.closest('.noti-item');
+    // Only track if the notification panel is actually open
+    if (noti && document.getElementById('notification-panel').classList.contains('open')) {
+        currentNoti = noti;
+        notiStartX = e.changedTouches[0].screenX;
+        currentNoti.style.transition = 'none'; // Snap instantly to finger
+    }
+}, { passive: true });
+
+// Move the notification with the finger
+document.addEventListener('touchmove', e => {
+    if (!currentNoti) return;
+    let currentX = e.changedTouches[0].screenX;
+    let diffX = currentX - notiStartX;
+    
+    // Only allow sliding to the right (out of the screen)
+    if (diffX > 0) { 
+        currentNoti.style.transform = `translateX(${diffX}px)`;
+        currentNoti.style.opacity = 1 - (diffX / 300); // Fade out as it slides
+    }
+}, { passive: true });
+
+// Determine whether to delete or snap back on release
+document.addEventListener('touchend', e => {
+    if (!currentNoti) return;
+    let currentX = e.changedTouches[0].screenX;
+    let diffX = currentX - notiStartX;
+    
+    currentNoti.style.transition = ''; // Restore CSS transitions
+
+    if (diffX > 100) {
+        // Trigger delete if swiped more than 100 pixels
+        deleteNotification(currentNoti);
+    } else {
+        // Snap back to original position
+        currentNoti.style.transform = '';
+        currentNoti.style.opacity = '';
+    }
+    currentNoti = null;
+}, { passive: true });
+
+function deleteNotification(element) {
+    // Save exactly where it was so we can put it back
+    lastDeletedNoti = {
+        element: element,
+        nextSibling: element.nextSibling,
+        parent: element.parentNode
+    };
+
+    // Animate out
+    element.classList.add('slide-out');
+    element.style.transform = ''; 
+    
+    // Wait for animation, then remove from DOM
+    setTimeout(() => {
+        if (element.parentNode) element.parentNode.removeChild(element);
+    }, 400);
+
+    showUndoToast();
+}
+
+function showUndoToast() {
+    const toast = document.getElementById('undo-toast');
+    toast.classList.add('show');
+    
+    clearTimeout(undoTimeout);
+    
+    // Hide the popup permanently after 2 seconds
+    undoTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        lastDeletedNoti = null; 
+    }, 2000);
+}
+
+function undoNotification() {
+    if (lastDeletedNoti) {
+        clearTimeout(undoTimeout);
+        document.getElementById('undo-toast').classList.remove('show');
+        
+        // Restore element visuals
+        lastDeletedNoti.element.classList.remove('slide-out');
+        lastDeletedNoti.element.style.transform = '';
+        lastDeletedNoti.element.style.opacity = '';
+
+        // Put it back in the exact same spot in the list
+        if (lastDeletedNoti.nextSibling) {
+            lastDeletedNoti.parent.insertBefore(lastDeletedNoti.element, lastDeletedNoti.nextSibling);
+        } else {
+            lastDeletedNoti.parent.appendChild(lastDeletedNoti.element);
+        }
+        
+        lastDeletedNoti = null;
+    }
+}
+
+// --- DYNAMIC NOTIFICATION MESSAGES ---
+const reminderMessages = [
+    "Don't forget to log your expenses today! 📝",
+    "Did you buy coffee today? Add it to your expenses! ☕",
+    "A penny saved is a penny earned. Track your spending! 💰",
+    "Small expenses add up! Keep your budget on track. 🚀",
+    "Financial freedom starts with tracking. Log your daily spends! 📈",
+    "Keep your wallet happy. Quick, log your recent transactions! 💳",
+    "Stay on top of your game! Any new income or expenses today? 🎯"
+];
+
+function sendSystemNotification() {
+    // 1. Check if the browser supports notifications
+    if (!("Notification" in window)) {
+        alert("This browser does not support desktop notifications");
+        return;
+    }
+
+    // 2. Pick a random message from our list
+    const randomIndex = Math.floor(Math.random() * reminderMessages.length);
+    const randomMessage = reminderMessages[randomIndex];
+
+    // 3. Send the notification if permission is already granted
+    if (Notification.permission === "granted") {
+        new Notification("Expense Pro", {
+            body: randomMessage,
+            icon: "icon.svg" 
+        });
+    } 
+    // 4. Otherwise, ask the user for permission
+    else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("Expense Pro", {
+                    body: "Awesome! We will use this to send you helpful reminders.",
+                    icon: "icon.svg"
+                });
+            }
+        });
+    }
+}
+
+               // Initialize application on load
+        window.onload = () => {
+            const dateInput = document.getElementById('tx-date');
+            if(dateInput) dateInput.valueAsDate = new Date();
+            
+            // Force the app to officially 'open' the Home tab so swipe knows where to start
+            document.getElementById('page-home').style.display = 'block';
+            
+            render();
+        };
+
+    </script>
+        <script>
+    if ('serviceWorker' in navigator) {
+        let refreshing = false;
+
+        // 1. Register the Service Worker
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered!'))
+            .catch(err => console.log('Service Worker failed:', err));
+
+        // 2. The Auto-Reload Magic
+        // This listens for the exact moment the new sw.js takes control
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                console.log('New version detected! Reloading quietly...');
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+</script>
+</body>
+</html>
