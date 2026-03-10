@@ -141,17 +141,24 @@
         .tx-list { list-style: none; padding: 0; margin: 0; }
             .tx-item { background: var(--card-bg); padding: 16px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.3s; gap: 10px; }
         
-                /* --- SLIDE DELETE ANIMATION --- */
-        .tx-item.slide-out {
-            transform: translateX(-120%);
-            opacity: 0;
-            margin-bottom: -80px; 
-            padding-top: 0;
-            padding-bottom: 0;
-            border-width: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+                /* --- SLIDE DELETE ANIMATION (FIXED FOR MOBILE) --- */
+.tx-item.slide-out {
+    transform: translateX(-120%) translateZ(0); /* translateZ(0) forces Mobile Hardware Acceleration */
+    opacity: 0;
+    margin-bottom: -80px; 
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    pointer-events: none;
+    
+    /* This is the magic part: It delays the margin collapse by 0.15 seconds */
+    transition: 
+        transform 0.25s ease-in, 
+        opacity 0.25s ease-in, 
+        margin-bottom 0.25s ease-in-out 0.15s, 
+        padding 0.25s ease-in-out 0.15s, 
+        border-width 0.25s ease-in-out 0.15s !important;
+}
 
 
         .tx-info { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
