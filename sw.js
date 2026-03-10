@@ -1,5 +1,5 @@
 // THE GOLDEN RULE: Change this version number EVERY time you push an update to GitHub!
-const CACHE_NAME = 'expense-pro-v2.0'; 
+const CACHE_NAME = 'expense-pro-v2.1'; 
 
 // 1. Install & Force Takeover
 self.addEventListener('install', (event) => {
