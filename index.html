@@ -3182,19 +3182,18 @@ function deleteTransaction() {
             handleSwipe(e);
         }, { passive: true });
 
-                function handleSwipe(event) {
+                   function handleSwipe(event) {
             // Block swipes if a modal, sidebar, or notification panel is open
             if (document.getElementById('add-modal').classList.contains('open') || 
                 document.getElementById('editOverlay').classList.contains('active') ||
                 document.getElementById('filter-modal').style.display === 'flex' ||
                 document.getElementById('sub-modal').style.display === 'flex' ||
-                document.getElementById('notification-panel').classList.contains('open') || // 👈 NEW: Blocks swipe if alerts are open
-                document.getElementById('sidebar').classList.contains('open') ||            // 👈 NEW: Blocks swipe if menu is open
-                event.target.closest('.time-filters') || 
-                event.target.closest('.tx-list')) { 
+                document.getElementById('notification-panel').classList.contains('open') || 
+                document.getElementById('sidebar').classList.contains('open') ||            
+                event.target.closest('.time-filters')) { 
+                // Notice we removed: || event.target.closest('.tx-list')
                 return; 
             }
-
 
             const swipeDistX = touchEndX - touchStartX;
             const swipeDistY = touchEndY - touchStartY;
@@ -3226,6 +3225,7 @@ function deleteTransaction() {
                 }
             }
         }
+
 
 
         // --- CALCULATOR LOGIC ---
