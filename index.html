@@ -2389,8 +2389,7 @@ function deleteTransaction() {
                let homeChart = null, lineChart = null, incomeChart = null, spendingChart = null;
 
 
-
-                function updateHomeChart(filtered = transactions) {
+        function updateHomeChart(filtered = transactions) {
             const canvas = document.getElementById('homeBarChart');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -2401,7 +2400,6 @@ function deleteTransaction() {
                 const catObj = categories.find(c => c.name.toUpperCase() === (t.category || '').toUpperCase());
                 let groupName = t.category || 'Others';
                 
-                // If it's in a folder, give the money to the folder instead!
                 if (catObj && catObj.parent) groupName = catObj.parent;
                 else if (catObj) groupName = catObj.name;
                 
@@ -2412,25 +2410,19 @@ function deleteTransaction() {
             const labels = sortedExpenses.map(item => item[0]);
             const data = sortedExpenses.map(item => item[1]);
 
-            if(homeChart) homeChart.destroy();
-
             const isDark = document.body.classList.contains('dark-mode');
-                    
             
-            // --- NEW: Empty State "Shadow Donut" Logic ---
             let finalLabels = labels;
             let finalData = data;
             let bgColors = [];
             let isPlaceholder = false;
 
-            // If there is no expense data, render a single gray placeholder ring
             if (data.length === 0) {
                 finalLabels = ['No Expenses Yet'];
-                finalData = [1]; // 1 solid ring
-                bgColors = [isDark ? '#333333' : '#e2e8f0']; // Dark gray for dark mode, light gray for light mode
+                finalData = [1]; 
+                bgColors = [isDark ? '#333333' : '#e2e8f0']; 
                 isPlaceholder = true;
-                       } else {
-                // Otherwise, render the real colors
+            } else {
                 bgColors = labels.map(label => {
                     const cat = categories.find(c => c.name.toUpperCase() === label.toUpperCase());
                     if (cat && cat.parent) {
@@ -2441,34 +2433,49 @@ function deleteTransaction() {
                 });
             }
 
-          homeChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    labels: finalLabels, 
-                    datasets: [{ 
-                        data: finalData, 
-                        backgroundColor: bgColors, 
-                        borderWidth: isPlaceholder ? 0 : 2, // Remove border if it's the shadow donut
-                        borderColor: isDark ? '#1e1e1e' : '#ffffff' 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '65%', 
-                    plugins: { 
-                        legend: { 
-                            display: !isPlaceholder, // Hide the legend if it's just the placeholder
-                            position: 'right', 
-                            labels: { color: isDark ? '#a1a1a1' : '#717171', usePointStyle: true, boxWidth: 8, font: { size: 11 } } 
-                        },
-                        tooltip: {
-                            enabled: !isPlaceholder // Disable hover popups for the placeholder ring
-                        }
-                    } 
-                }
-            });
-                }
+            // --- THE FIX: Update instead of Destroy ---
+            if (homeChart) {
+                // Smoothly update existing data
+                homeChart.data.labels = finalLabels;
+                homeChart.data.datasets[0].data = finalData;
+                homeChart.data.datasets[0].backgroundColor = bgColors;
+                homeChart.data.datasets[0].borderWidth = isPlaceholder ? 0 : 2;
+                homeChart.data.datasets[0].borderColor = isDark ? '#1e1e1e' : '#ffffff';
+                homeChart.options.plugins.legend.display = !isPlaceholder;
+                homeChart.options.plugins.tooltip.enabled = !isPlaceholder;
+                homeChart.update(); // Triggers a smooth morph transition!
+            } else {
+                // Create it only the very first time the app loads
+                homeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { 
+                        labels: finalLabels, 
+                        datasets: [{ 
+                            data: finalData, 
+                            backgroundColor: bgColors, 
+                            borderWidth: isPlaceholder ? 0 : 2, 
+                            borderColor: isDark ? '#1e1e1e' : '#ffffff' 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '65%', 
+                        plugins: { 
+                            legend: { 
+                                display: !isPlaceholder, 
+                                position: 'right', 
+                                labels: { color: isDark ? '#a1a1a1' : '#717171', usePointStyle: true, boxWidth: 8, font: { size: 11 } } 
+                            },
+                            tooltip: {
+                                enabled: !isPlaceholder 
+                            }
+                        } 
+                    }
+                });
+            }
+        }
+
                        function updateSpendingChart(viewType, btnElement = null) {
             if (btnElement) {
                 const container = btnElement.closest('.time-filters');
