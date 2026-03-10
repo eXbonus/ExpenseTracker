@@ -8,6 +8,14 @@ const ASSETS_TO_CACHE = [
   './chart.js',
   './xlsx.js'
 ];
+self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Forces the new update to take over instantly
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim()); // Takes control of all open apps immediately
+});
+
 
 // Install the Service Worker and cache the files
 self.addEventListener('install', (event) => {
